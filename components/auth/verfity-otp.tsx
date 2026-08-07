@@ -90,6 +90,7 @@ export default function VerifyOtpPage() {
       await signUp.finalize({
         navigate: ({ decorateUrl }) => {
           const url = decorateUrl("/dashboard");
+          sessionStorage.removeItem("signup-form");
 
           if (url.startsWith("https")) {
             window.location.href = url;

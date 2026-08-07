@@ -22,12 +22,11 @@ export default function LandingPage() {
       {/* Navbar */}
       <nav className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6">
         <div className="flex items-baseline gap-1">
-          <span className="font-serif text-xl italic tracking-tight">Team</span>
-          <span className="font-mono text-xl font-medium text-violet-400">
-            /Workspace
-          </span>
+          <h1 className="font-mono text-lg font-bold tracking-wide text-white">
+            Team <span className="text-violet-400">Workspace</span>
+          </h1>
         </div>
- 
+
         <div className="flex items-center gap-6">
           <Link
             href="/auth?mode=login"
@@ -35,13 +34,13 @@ export default function LandingPage() {
           >
             Sign in
           </Link>
- 
-         <Link
+
+          <Link
             href="/auth?mode=signup"
             className="rounded-md bg-gradient-to-r from-violet-600 to-purple-500 px-5 py-2.5 font-mono text-sm font-semibold text-white transition hover:scale-[1.02] hover:shadow-lg hover:shadow-violet-600/30 active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
-            >
+          >
             Start Free
-            </Link>
+          </Link>
         </div>
       </nav>
 
@@ -58,8 +57,8 @@ export default function LandingPage() {
         </h1>
 
         <p className="mt-8 max-w-2xl text-lg leading-8 text-zinc-400">
-          Manage projects, collaborate with your team, organize notes,
-          track tasks, and chat with AI—all in one modern workspace.
+          Manage projects, collaborate with your team, organize notes, track
+          tasks, and chat with AI—all in one modern workspace.
         </p>
 
         <div className="mt-12 flex gap-5">
@@ -70,11 +69,8 @@ export default function LandingPage() {
             Get Started
             <ArrowRight size={18} />
           </Link>
-
         </div>
       </section>
-
     </main>
   );
 }
-
