@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Mail, ShieldCheck } from "lucide-react";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
+import { useSignUp } from "@clerk/nextjs";
 
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 30;
@@ -13,6 +14,7 @@ export default function VerifyOtpPage() {
   const [cooldown, setCooldown] = useState(RESEND_SECONDS);
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
+  const { signUp } = useSignUp();
 
   const otp = digits.join("");
   const isValid = otp.length === OTP_LENGTH;
@@ -72,20 +74,51 @@ export default function VerifyOtpPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log(otp);
+    try {
+      const { error } = await signUp.verifications.verifyEmailCode({
+        code: otp,
+      });
 
-    // Later:
-    // await signUp.attemptEmailAddressVerification({ code: otp });
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      await signUp.finalize({
+        navigate: ({ decorateUrl }) => {
+          const url = decorateUrl("/dashboard");
+
+          if (url.startsWith("https")) {
+            window.location.href = url;
+          } else {
+            router.push(url);
+          }
+        },
+      });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (cooldown > 0) return;
-    setCooldown(RESEND_SECONDS);
-    // Later:
-    // await signUp.prepareEmailAddressVerification();
+
+    try {
+      setCooldown(RESEND_SECONDS);
+      const { error } = await signUp.verifications.sendEmailCode();
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      console.log("Verification email sent again");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -154,7 +187,7 @@ export default function VerifyOtpPage() {
               className={clsx(
                 "flex h-12 w-full items-center justify-center gap-2 rounded-xl font-semibold text-white transition",
                 isValid
-                  ? "bg-gradient-to-r from-violet-600 to-purple-500 hover:scale-[1.02] hover:shadow-lg hover:shadow-violet-600/30"
+                  ? "bg-gradient-to-r from-violet-600 to-purple-500 hover:scale-[1.02] hover:shadow-lg hover:shadow-violet-600/30 hover:cursor-pointer"
                   : "cursor-not-allowed bg-zinc-700 text-zinc-400 opacity-60",
               )}
             >

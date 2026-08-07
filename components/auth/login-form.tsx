@@ -42,7 +42,7 @@ export default function LoginForm({ onSwitch }: Props) {
         navigate: async ({ decorateUrl }) => {
           const url = decorateUrl("/dashboard");
 
-          if (url.startsWith("http")) {
+          if (url.startsWith("https")) {
             window.location.href = url;
           } else {
             router.push(url);

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, LoaderCircle } from "lucide-react";
 import clsx from "clsx";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -26,7 +26,7 @@ export default function SignupForm({ onSwitch }: Props) {
     register,
     handleSubmit,
     setValue,
-    formState: { errors, isValid },
+    formState: { errors, isValid, isSubmitting },
   } = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
     mode: "onChange",
@@ -64,7 +64,6 @@ export default function SignupForm({ onSwitch }: Props) {
         password: data.password,
       });
 
-      console.log(error);
       if (error) {
         console.error(JSON.stringify(error, null, 2));
         return;
@@ -152,16 +151,25 @@ export default function SignupForm({ onSwitch }: Props) {
 
         <button
           type="submit"
-          disabled={!isValid}
+          disabled={!isValid || isSubmitting}
           className={clsx(
             "mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl font-semibold text-white transition",
-            isValid
+            isValid && !isSubmitting
               ? "bg-gradient-to-r from-violet-600 to-purple-500 hover:scale-[1.02] hover:shadow-lg hover:shadow-violet-600/30 hover:cursor-pointer"
               : "bg-zinc-700 text-zinc-400 cursor-not-allowed opacity-60",
           )}
         >
-          Create Account
-          <ArrowRight size={18} />
+          {isSubmitting ? (
+            <>
+              <LoaderCircle className="h-5 w-5 animate-spin" />
+              Creating Account...
+            </>
+          ) : (
+            <>
+              Create Account
+              <ArrowRight size={18} />
+            </>
+          )}
         </button>
       </form>
 
