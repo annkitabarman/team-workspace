@@ -14,7 +14,8 @@ type Props = {
 };
 
 const signUpSchema = z.object({
-  fullName: z.string().min(1, "Full name is required"),
+  firstName: z.string().min(3, "First name is required"),
+  lastName: z.string(),
   email: z.email("Please enter a valid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
@@ -41,7 +42,7 @@ export default function SignupForm({ onSwitch }: Props) {
 
     const data: SignUpForm = JSON.parse(saved);
 
-    setValue("fullName", data.fullName, {
+    setValue("firstName", data.firstName, {
       shouldValidate: true,
       shouldDirty: true,
     });
@@ -60,6 +61,8 @@ export default function SignupForm({ onSwitch }: Props) {
   const onSubmit = async (data: SignUpForm) => {
     try {
       const { error } = await signUp.password({
+        firstName: data.firstName,
+        lastName: data.lastName,
         emailAddress: data.email,
         password: data.password,
       });
@@ -88,20 +91,41 @@ export default function SignupForm({ onSwitch }: Props) {
             Full Name
           </label>
 
-          <input
-            {...register("fullName")}
-            placeholder="John Doe"
-            className={clsx(
-              "h-12 w-full rounded-xl border bg-zinc-900 px-4 text-white outline-none transition",
-              errors.fullName ? "border-red-500" : "border-zinc-700",
-            )}
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <input
+                {...register("firstName")}
+                placeholder="First Name"
+                className={clsx(
+                  "h-12 w-full rounded-xl border bg-zinc-900 px-4 text-white outline-none transition",
+                  errors.firstName ? "border-red-500" : "border-zinc-700",
+                )}
+              />
 
-          {errors.fullName && (
-            <p className="mt-1 text-[0.6rem] text-red-400">
-              {errors.fullName.message}
-            </p>
-          )}
+              {errors.firstName && (
+                <p className="mt-1 text-[0.6rem] text-red-400">
+                  {errors.firstName.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <input
+                {...register("lastName")}
+                placeholder="Last Name"
+                className={clsx(
+                  "h-12 w-full rounded-xl border bg-zinc-900 px-4 text-white outline-none transition",
+                  errors.lastName ? "border-red-500" : "border-zinc-700",
+                )}
+              />
+
+              {errors.lastName && (
+                <p className="mt-1 text-[0.6rem] text-red-400">
+                  {errors.lastName.message}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
 
         <div>

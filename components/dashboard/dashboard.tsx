@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { createUser } from "@/app/actions/user";
 import { LogOut } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 
 export default function Dashboard() {
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
+  console.log(user);
   const { signOut } = useClerk();
 
   const handleLogout = async () => {
@@ -15,34 +14,6 @@ export default function Dashboard() {
       redirectUrl: "/",
     });
   };
-
-  useEffect(() => {
-    async function syncUser() {
-      if (!isLoaded || !user) return;
-
-      const saved = sessionStorage.getItem("signup-form");
-
-      if (!saved) return;
-
-      const data = JSON.parse(saved);
-
-      try {
-        await createUser({
-          clerkUserId: user.id,
-          fullName: data.fullName,
-          email: data.email,
-        });
-
-        sessionStorage.removeItem("signup-form");
-      } catch (err) {
-        console.error(err);
-      }
-
-      sessionStorage.removeItem("signup-form");
-    }
-
-    syncUser();
-  }, [isLoaded, user]);
 
   return (
     <div>
