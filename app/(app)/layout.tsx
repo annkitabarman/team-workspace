@@ -1,13 +1,9 @@
 import DashboardNavbar from "@/components/dashboard/dashboard-navbar";
 import DashboardSidebar from "@/components/dashboard/dashboard-sidebar";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-screen flex-col bg-background">
       <DashboardNavbar />
 
       <div className="flex flex-1 overflow-hidden">
