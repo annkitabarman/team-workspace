@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Mail, ShieldCheck } from "lucide-react";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
-import { useSignUp } from "@clerk/nextjs";
+import { useSignUp, useSignIn } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
 
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 30;
@@ -15,6 +16,10 @@ export default function VerifyOtpPage() {
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
   const { signUp } = useSignUp();
+  const { signIn } = useSignIn();
+
+  const searchParams = useSearchParams();
+  const flow = searchParams.get("flow");
 
   const otp = digits.join("");
   const isValid = otp.length === OTP_LENGTH;
@@ -78,27 +83,61 @@ export default function VerifyOtpPage() {
     e.preventDefault();
 
     try {
-      const { error } = await signUp.verifications.verifyEmailCode({
-        code: otp,
-      });
+      // -------------------------
+      // Signup verification
+      // -------------------------
+      if (flow === "signup") {
+        const { error } = await signUp.verifications.verifyEmailCode({
+          code: otp,
+        });
 
-      if (error) {
-        console.error(error);
+        if (error) {
+          console.error(error);
+          return;
+        }
+
+        await signUp.finalize({
+          navigate: ({ decorateUrl }) => {
+            sessionStorage.removeItem("signup-form");
+
+            const url = decorateUrl("/dashboard");
+
+            if (url.startsWith("https")) {
+              window.location.href = url;
+            } else {
+              router.push(url);
+            }
+          },
+        });
+
         return;
       }
 
-      await signUp.finalize({
-        navigate: ({ decorateUrl }) => {
-          const url = decorateUrl("/dashboard");
-          sessionStorage.removeItem("signup-form");
+      // -------------------------
+      // Login verification
+      // -------------------------
+      if (flow === "login") {
+        const { error } = await signIn.mfa.verifyEmailCode({
+          code: otp,
+        });
 
-          if (url.startsWith("https")) {
-            window.location.href = url;
-          } else {
-            router.push(url);
-          }
-        },
-      });
+        if (error) {
+          console.error(error);
+          return;
+        }
+
+        await signIn.finalize({
+          navigate: ({ decorateUrl }) => {
+            const url = decorateUrl("/dashboard");
+
+            if (url.startsWith("https")) {
+              window.location.href = url;
+            } else {
+              router.push(url);
+            }
+          },
+        });
+      }
     } catch (err) {
       console.error(err);
     }
@@ -109,14 +148,18 @@ export default function VerifyOtpPage() {
 
     try {
       setCooldown(RESEND_SECONDS);
-      const { error } = await signUp.verifications.sendEmailCode();
 
-      if (error) {
-        console.error(error);
-        return;
+      if (flow === "signup") {
+        const { error } = await signUp.verifications.sendEmailCode();
+
+        if (error) {
+          console.error(error);
+        }
       }
 
-      console.log("Verification email sent again");
+      if (flow === "login") {
+        await signIn.mfa.sendEmailCode();
+      }
     } catch (err) {
       console.error(err);
     }

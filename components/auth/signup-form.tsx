@@ -76,7 +76,7 @@ export default function SignupForm({ onSwitch }: Props) {
 
       sessionStorage.setItem("signup-form", JSON.stringify(data));
 
-      router.push("/verify");
+      router.push("/verify?flow=signup");
     } catch (err) {
       console.error("SIGNUP ERROR");
       console.dir(err, { depth: null });

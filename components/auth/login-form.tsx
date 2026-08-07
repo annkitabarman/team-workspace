@@ -33,22 +33,35 @@ export default function LoginForm({ onSwitch }: Props) {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await signIn.create({
+      const { error } = await signIn.create({
         identifier: data.email,
         password: data.password,
       });
 
-      await signIn.finalize({
-        navigate: async ({ decorateUrl }) => {
-          const url = decorateUrl("/dashboard");
+      if (error) {
+        console.error(error);
+        return;
+      }
 
-          if (url.startsWith("https")) {
-            window.location.href = url;
-          } else {
-            router.push(url);
-          }
-        },
-      });
+      if (signIn.status === "needs_client_trust") {
+        await signIn.mfa.sendEmailCode();
+        router.push("/verify?flow=login");
+        return;
+      }
+
+      if (signIn.status === "complete") {
+        await signIn.finalize({
+          navigate: ({ decorateUrl }) => {
+            const url = decorateUrl("/dashboard");
+
+            if (url.startsWith("https")) {
+              window.location.href = url;
+            } else {
+              router.push(url);
+            }
+          },
+        });
+      }
     } catch (err) {
       console.error(err);
     }
