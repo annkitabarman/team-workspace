@@ -30,7 +30,7 @@ export default function AddProjectModal({
     setTechnologies((prev) => prev.filter((item) => item !== tech));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     // Later:
@@ -142,7 +142,7 @@ export default function AddProjectModal({
               <button
                 type="button"
                 onClick={addTechnology}
-                className="flex h-10 items-center gap-1 rounded-xl border border-border bg-background px-3 text-sm text-muted transition hover:bg-surface-hover hover:text-foreground"
+                className="flex h-10 items-center gap-1 rounded-xl border border-border bg-background px-3 text-sm text-muted transition hover:bg-surface-hover hover:text-foreground hover:cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
                 Add
@@ -162,7 +162,7 @@ export default function AddProjectModal({
                     <button
                       type="button"
                       onClick={() => removeTechnology(tech)}
-                      className="text-muted transition hover:text-red-400"
+                      className="text-muted transition hover:text-red-400 hover:cursor-pointer"
                     >
                       <X className="h-3 w-3" />
                     </button>

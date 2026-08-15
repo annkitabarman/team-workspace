@@ -12,12 +12,15 @@ datasource db {
   url = env("DATABASE_URL")
 }
 
-model User {
-  id          String   @id @default(cuid())
-  clerkUserId String   @unique
-  fullName    String
-  email       String   @unique
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+model Project {
+  id            String    @id @default(cuid())
+  projectName   String    
+  description   String
+  githubUrl     String?
+  technologies  String[]
+  clerkUserId  String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
