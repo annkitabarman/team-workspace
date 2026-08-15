@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
+import { createProjectAction } from "@/app/actions/project";
+import { useRouter } from "next/navigation";
 
 type AddProjectModalProps = {
   isOpen: boolean;
@@ -14,6 +16,7 @@ export default function AddProjectModal({
 }: AddProjectModalProps) {
   const [technologies, setTechnologies] = useState<string[]>([]);
   const [technology, setTechnology] = useState("");
+  const router = useRouter();
 
   if (!isOpen) return null;
 
@@ -30,20 +33,19 @@ export default function AddProjectModal({
     setTechnologies((prev) => prev.filter((item) => item !== tech));
   };
 
-  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Later:
-    // await createProject(...)
-
-    console.log({
-      name: e.currentTarget.projectName.value,
+    const payload = {
+      projectName: e.currentTarget.projectName.value,
       description: e.currentTarget.description.value,
       githubUrl: e.currentTarget.githubUrl.value,
       technologies,
-    });
+    };
+    const project = await createProjectAction(payload);
 
     onClose();
+    router.push(`/projects/${project.id}`);
   };
 
   return (

@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "./prisma";
 
-type CreateProjectData = {
+export type CreateProjectData = {
   projectName: string;
   description?: string;
   githubUrl?: string;
@@ -19,7 +19,7 @@ export async function createProject(data: CreateProjectData) {
     data: {
       projectName: data.projectName,
       description: data.description || "",
-      githubUrl: data.githubUrl || null,
+      githubUrl: data.githubUrl || undefined,
       technologies: data.technologies,
       clerkUserId: userId,
     },
