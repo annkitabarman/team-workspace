@@ -48,3 +48,37 @@ export async function deleteProject(projectId: string) {
     },
   });
 }
+
+export async function updateProject(
+  projectId: string,
+  data: CreateProjectData,
+) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const project = await prisma.project.findFirst({
+    where: {
+      id: projectId,
+      clerkUserId: userId,
+    },
+  });
+
+  if (!project) {
+    throw new Error("Project not found");
+  }
+
+  return prisma.project.update({
+    where: {
+      id: projectId,
+    },
+    data: {
+      projectName: data.projectName,
+      description: data.description || "",
+      githubUrl: data.githubUrl || null,
+      technologies: data.technologies,
+    },
+  });
+}

@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { deleteProjectAction } from "@/app/actions/project";
+import DeleteProjectModal from "../modal-popup/delete-project-popup";
 
 type ProjectCardProps = {
   id: string;
@@ -23,9 +25,8 @@ type ProjectCardProps = {
   features: number;
   completed: number;
   updatedAt: string;
+  onEdit: () => void;
 };
-import { deleteProjectAction } from "@/app/actions/project";
-import DeleteProjectModal from "../modal-popup/delete-project-popup";
 
 export default function ProjectCard({
   id,
@@ -36,11 +37,13 @@ export default function ProjectCard({
   features,
   completed,
   updatedAt,
+  onEdit,
 }: ProjectCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
   const menuItems = [
     {
       label: "Open",
@@ -53,8 +56,8 @@ export default function ProjectCard({
       icon: Pencil,
     },
     {
-      label: "Archieve",
-      action: "archieve",
+      label: "Archive",
+      action: "archive",
       icon: Archive,
     },
   ];
@@ -75,9 +78,9 @@ export default function ProjectCard({
 
   return (
     <>
+      {/* Project Card */}
       <div
         onClick={() => router.push(`/projects/${id}`)}
-        ref={menuRef}
         className="group relative flex min-h-[340px] cursor-pointer flex-col rounded-2xl border border-border bg-surface p-6 transition duration-200 hover:-translate-y-1 hover:border-violet-500/40 hover:bg-surface-hover hover:shadow-xl hover:shadow-violet-500/10"
       >
         {/* Header */}
@@ -91,14 +94,14 @@ export default function ProjectCard({
           </div>
 
           {/* More menu */}
-          <div className="relative">
+          <div ref={menuRef} className="relative">
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setMenuOpen((prev) => !prev);
               }}
-              className="rounded-lg p-1.5 text-muted opacity-0 transition hover:bg-background hover:text-foreground group-hover:opacity-100 hover:cursor-pointer"
+              className="rounded-lg p-1.5 text-muted opacity-0 transition hover:cursor-pointer hover:bg-background hover:text-foreground group-hover:opacity-100"
             >
               <MoreHorizontal className="h-5 w-5" />
             </button>
@@ -110,14 +113,26 @@ export default function ProjectCard({
               >
                 {menuItems.map((menu) => {
                   const Icon = menu.icon;
+
                   return (
                     <button
                       key={menu.action}
                       type="button"
-                      className="flex w-full items-center gap-3 px-3 py-2 text-sm text-muted transition hover:bg-surface-hover hover:text-foreground hover:cursor-pointer"
+                      className="flex w-full items-center gap-3 px-3 py-2 text-sm text-muted transition hover:cursor-pointer hover:bg-surface-hover hover:text-foreground"
                       onClick={() => {
-                        console.log(menu.action, id);
                         setMenuOpen(false);
+
+                        if (menu.action === "open") {
+                          router.push(`/projects/${id}`);
+                        }
+
+                        if (menu.action === "edit") {
+                          onEdit();
+                        }
+
+                        if (menu.action === "archive") {
+                          console.log("archive", id);
+                        }
                       }}
                     >
                       <Icon className="h-4 w-4" />
@@ -128,9 +143,10 @@ export default function ProjectCard({
 
                 <div className="my-1 border-t border-border" />
 
+                {/* Delete */}
                 <button
                   type="button"
-                  className="flex w-full items-center gap-3 px-3 py-2 text-sm text-red-400 transition hover:bg-red-500/10 hover:cursor-pointer"
+                  className="flex w-full items-center gap-3 px-3 py-2 text-sm text-red-400 transition hover:cursor-pointer hover:bg-red-500/10"
                   onClick={() => {
                     setMenuOpen(false);
                     setDeleteModalOpen(true);
@@ -187,6 +203,8 @@ export default function ProjectCard({
           <p className="text-xs text-muted-foreground">Updated {updatedAt}</p>
         </div>
       </div>
+
+      {/* Delete modal */}
       <DeleteProjectModal
         isOpen={deleteModalOpen}
         projectName={name}

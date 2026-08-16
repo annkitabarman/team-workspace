@@ -3,7 +3,7 @@
 import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import ProjectCard from "./project-card";
-import AddProjectModal from "../modal-popup/add-project-modal-popup";
+import AddProjectModal from "../modal-popup/add-edit-project-popup";
 
 type Project = {
   id: string;
@@ -22,6 +22,7 @@ type ProjectsClientProps = {
 
 export default function AllProjects({ projects }: ProjectsClientProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   return (
     <div className="px-8 py-8">
@@ -70,14 +71,24 @@ export default function AllProjects({ projects }: ProjectsClientProps) {
               features={0}
               completed={0}
               updatedAt={project.updatedAt.toLocaleDateString("en-GB")}
+              onEdit={() => {
+                setEditingProject(project);
+                setIsModalOpen(true);
+              }}
             />
           ))
         )}
       </div>
 
       <AddProjectModal
+        key={editingProject?.id ?? "create"}
+        mode={editingProject ? "edit" : "create"}
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        project={editingProject ?? undefined}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingProject(null);
+        }}
       />
     </div>
   );

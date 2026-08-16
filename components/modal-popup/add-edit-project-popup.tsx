@@ -1,21 +1,37 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, X } from "lucide-react";
-import { createProjectAction } from "@/app/actions/project";
+import { Plus, X, Pencil } from "lucide-react";
+import {
+  createProjectAction,
+  updateProjectAction,
+} from "@/app/actions/project";
 import { useRouter } from "next/navigation";
 
 type AddProjectModalProps = {
+  mode: "create" | "edit";
   isOpen: boolean;
   onClose: () => void;
+  project?: {
+    id: string;
+    projectName: string;
+    description: string | null;
+    githubUrl: string | null;
+    technologies: string[];
+  };
 };
 
 export default function AddProjectModal({
   isOpen,
   onClose,
+  mode,
+  project,
 }: AddProjectModalProps) {
-  const [technologies, setTechnologies] = useState<string[]>([]);
+  const [technologies, setTechnologies] = useState<string[]>(
+    project?.technologies ?? [],
+  );
   const [technology, setTechnology] = useState("");
+
   const router = useRouter();
 
   if (!isOpen) return null;
@@ -38,14 +54,35 @@ export default function AddProjectModal({
 
     const payload = {
       projectName: e.currentTarget.projectName.value,
-      description: e.currentTarget.description.value,
-      githubUrl: e.currentTarget.githubUrl.value,
+      description: e.currentTarget.description.value || undefined,
+      githubUrl: e.currentTarget.githubUrl.value || undefined,
       technologies,
     };
-    const project = await createProjectAction(payload);
 
-    onClose();
-    router.push(`/projects/${project.id}`);
+    try {
+      if (mode === "create") {
+        const createdProject = await createProjectAction(payload);
+
+        onClose();
+
+        router.push(`/projects/${createdProject.id}`);
+      } else {
+        if (!project) return;
+
+        await updateProjectAction(project.id, payload);
+
+        onClose();
+
+        router.refresh();
+      }
+    } catch (error) {
+      console.error(
+        mode === "create"
+          ? "Failed to create project:"
+          : "Failed to update project:",
+        error,
+      );
+    }
   };
 
   return (
@@ -57,23 +94,25 @@ export default function AddProjectModal({
       />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-lg max-h-[calc(100vh-4rem)] overflow-y-auto rounded-2xl border border-border bg-surface shadow-2xl">
+      <div className="relative z-10 max-h-[calc(100vh-4rem)] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-surface shadow-2xl">
         {/* Header */}
         <div className="flex items-start justify-between border-b border-border px-6 py-5">
           <div>
             <h2 className="text-xl font-semibold text-foreground">
-              Create New Project
+              {mode === "create" ? "Create New Project" : "Edit Project"}
             </h2>
 
             <p className="mt-1 text-sm text-muted">
-              Add a project to your workspace.
+              {mode === "create"
+                ? "Add a project to your workspace."
+                : "Update your project details."}
             </p>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-muted transition hover:bg-surface-hover hover:text-foreground hover:cursor-pointer"
+            className="rounded-lg p-2 text-muted transition hover:cursor-pointer hover:bg-surface-hover hover:text-foreground"
           >
             <X className="h-5 w-5" />
           </button>
@@ -94,6 +133,7 @@ export default function AddProjectModal({
               id="projectName"
               name="projectName"
               required
+              defaultValue={project?.projectName ?? ""}
               placeholder="e.g. Media Tracker"
               className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-violet-500"
             />
@@ -112,6 +152,7 @@ export default function AddProjectModal({
               id="description"
               name="description"
               rows={3}
+              defaultValue={project?.description ?? ""}
               placeholder="What are you building?"
               className="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-violet-500"
             />
@@ -144,7 +185,7 @@ export default function AddProjectModal({
               <button
                 type="button"
                 onClick={addTechnology}
-                className="flex h-10 items-center gap-1 rounded-xl border border-border bg-background px-3 text-sm text-muted transition hover:bg-surface-hover hover:text-foreground hover:cursor-pointer"
+                className="flex h-10 items-center gap-1 rounded-xl border border-border bg-background px-3 text-sm text-muted transition hover:cursor-pointer hover:bg-surface-hover hover:text-foreground"
               >
                 <Plus className="h-4 w-4" />
                 Add
@@ -164,7 +205,7 @@ export default function AddProjectModal({
                     <button
                       type="button"
                       onClick={() => removeTechnology(tech)}
-                      className="text-muted transition hover:text-red-400 hover:cursor-pointer"
+                      className="text-muted transition hover:cursor-pointer hover:text-red-400"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -190,6 +231,7 @@ export default function AddProjectModal({
               id="githubUrl"
               name="githubUrl"
               type="url"
+              defaultValue={project?.githubUrl ?? ""}
               placeholder="https://github.com/username/project"
               className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-violet-500"
             />
@@ -200,17 +242,22 @@ export default function AddProjectModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-muted transition hover:bg-surface-hover hover:text-foreground hover:cursor-pointer"
+              className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-muted transition hover:cursor-pointer hover:bg-surface-hover hover:text-foreground"
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-500 hover:cursor-pointer"
+              className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:cursor-pointer hover:bg-violet-500"
             >
-              <Plus className="h-4 w-4" />
-              Create Project
+              {mode === "create" ? (
+                <Plus className="h-4 w-4" />
+              ) : (
+                <Pencil className="h-4 w-4" />
+              )}
+
+              {mode === "create" ? "Create Project" : "Save Changes"}
             </button>
           </div>
         </form>
