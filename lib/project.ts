@@ -27,3 +27,24 @@ export async function createProject(data: CreateProjectData) {
 
   return project;
 }
+
+export async function deleteProject(projectId: string) {
+  const { userId } = await auth();
+
+  if (!userId) throw new Error("Unauthorized");
+
+  const project = await prisma.project.findFirst({
+    where: {
+      id: projectId,
+      clerkUserId: userId,
+    },
+  });
+
+  if (!project) throw new Error("No project found");
+
+  await prisma.project.delete({
+    where: {
+      id: projectId,
+    },
+  });
+}
