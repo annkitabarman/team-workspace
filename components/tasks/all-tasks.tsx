@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import clsx from "clsx";
+import { useRouter } from "next/navigation";
+import AddTaskModal from "../modal-popup/add-task-popup";
 
 type TaskStatus = "Todo" | "In Progress" | "Completed";
 type TaskType = "Feature" | "Bug" | "Task";
@@ -98,6 +100,7 @@ const statusFilters = ["All", "Todo", "In Progress", "Completed"];
 export default function AllTasks() {
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [search, setSearch] = useState("");
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   const filteredTasks = tasks.filter((task) => {
     const matchesStatus =
@@ -124,7 +127,10 @@ export default function AllTasks() {
           </p>
         </div>
 
-        <button className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-500 hover:cursor-pointer">
+        <button
+          onClick={() => setIsTaskModalOpen(true)}
+          className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-500 hover:cursor-pointer"
+        >
           <Plus className="h-4 w-4" />
           New Task
         </button>
@@ -219,6 +225,10 @@ export default function AllTasks() {
           </div>
         )}
       </div>
+      <AddTaskModal
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
+      />
     </div>
   );
 }
@@ -245,6 +255,7 @@ function TaskSummary({
 }
 
 function TaskRow({ task }: { task: Task }) {
+  const router = useRouter();
   return (
     <div className="group grid grid-cols-[1fr_180px_140px_120px_40px] items-center gap-4 border-b border-border px-5 py-4 last:border-b-0 transition hover:bg-surface-hover">
       {/* Task */}
@@ -266,8 +277,12 @@ function TaskRow({ task }: { task: Task }) {
             )}
 
             <p
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/tasks/${task.id}`);
+              }}
               className={clsx(
-                "truncate text-sm font-medium",
+                "cursor-pointer truncate text-sm font-medium hover:text-violet-400",
                 task.status === "Completed"
                   ? "text-muted line-through"
                   : "text-foreground",

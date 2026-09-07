@@ -1,4 +1,3 @@
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "./prisma";
 
 export type CreateProjectData = {
@@ -6,33 +5,24 @@ export type CreateProjectData = {
   description?: string;
   githubUrl?: string;
   technologies: string[];
+  clerkUserId: string;
 };
 
 export async function createProject(data: CreateProjectData) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
   const project = await prisma.project.create({
     data: {
       projectName: data.projectName,
       description: data.description || "",
       githubUrl: data.githubUrl || undefined,
       technologies: data.technologies,
-      clerkUserId: userId,
+      clerkUserId: data.clerkUserId,
     },
   });
 
   return project;
 }
 
-export async function deleteProject(projectId: string) {
-  const { userId } = await auth();
-
-  if (!userId) throw new Error("Unauthorized");
-
+export async function deleteProject(projectId: string, userId: string) {
   const project = await prisma.project.findFirst({
     where: {
       id: projectId,
@@ -53,16 +43,10 @@ export async function updateProject(
   projectId: string,
   data: CreateProjectData,
 ) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
   const project = await prisma.project.findFirst({
     where: {
       id: projectId,
-      clerkUserId: userId,
+      clerkUserId: data.clerkUserId,
     },
   });
 

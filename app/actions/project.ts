@@ -1,15 +1,24 @@
 "use server";
 
-import { createProject, deleteProject, updateProject } from "@/lib/project";
-import { CreateProjectData } from "@/lib/project";
+import { getAuthenticatedUser } from "./auth";
+import {
+  createProject,
+  deleteProject,
+  updateProject,
+  type CreateProjectData,
+} from "@/lib/project";
 import { revalidatePath } from "next/cache";
 
 export async function createProjectAction(data: CreateProjectData) {
-  return await createProject(data);
+  const userId = await getAuthenticatedUser();
+
+  return createProject({ ...data, clerkUserId: userId });
 }
 
 export async function deleteProjectAction(projectId: string) {
-  await deleteProject(projectId);
+  const userId = await getAuthenticatedUser();
+
+  await deleteProject(projectId, userId);
 
   revalidatePath("/projects");
 }
@@ -18,7 +27,12 @@ export async function updateProjectAction(
   projectId: string,
   data: CreateProjectData,
 ) {
-  const project = await updateProject(projectId, data);
+  const userId = await getAuthenticatedUser();
+
+  const project = await updateProject(projectId, {
+    ...data,
+    clerkUserId: userId,
+  });
 
   revalidatePath("/projects");
   revalidatePath(`/projects/${projectId}`);

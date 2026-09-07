@@ -12,8 +12,6 @@ datasource db {
   url = env("DATABASE_URL")
 }
 
-
-
 model Project {
   id            String    @id @default(cuid())
   projectName   String    
@@ -21,6 +19,43 @@ model Project {
   githubUrl     String?
   technologies  String[]
   clerkUserId  String
+  tasks Task[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  taskName    String
+  description String?
+  type        TaskType     @default(TASK)
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  clerkUserId String
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id])
+
+  @@index([clerkUserId])
+  @@index([projectId])
+}
+
+enum TaskType {
+  TASK
+  FEATURE
+  BUG
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
 }
