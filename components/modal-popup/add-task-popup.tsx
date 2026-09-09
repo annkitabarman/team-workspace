@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Plus, X, ChevronDown } from "lucide-react";
+import { Calendar, Plus, X, ChevronDown, Search } from "lucide-react";
 import { useForm, useWatch, Controller } from "react-hook-form";
 import { createTaskAction } from "@/app/actions/tasks";
 import { CreateTaskData } from "@/lib/tasks";
@@ -48,6 +48,16 @@ export default function AddTaskModal({
   });
   const router = useRouter();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [userSearch, setUserSearch] = useState("");
+
+  const filteredUsers = users.filter((user) => {
+    const search = userSearch.toLowerCase();
+
+    return (
+      user.fullName.toLowerCase().includes(search) ||
+      user.email.toLowerCase().includes(search)
+    );
+  });
 
   const selectedAssigneeId = useWatch({
     control,
@@ -101,6 +111,7 @@ export default function AddTaskModal({
   const handleClose = () => {
     reset();
     setOpenDropdown(null);
+    setUserSearch("");
     onClose();
   };
 
@@ -238,6 +249,7 @@ export default function AddTaskModal({
           </div>
 
           {/* Assign To */}
+          {/* Assign To */}
           <div className="relative">
             <Controller
               name="assigneeId"
@@ -261,33 +273,57 @@ export default function AddTaskModal({
                         selectedAssignee ? "text-foreground" : "text-muted"
                       }
                     >
-                      {selectedAssignee?.fullName ?? "Select a user"}
+                      {selectedAssignee?.fullName ?? "Assign to"}
                     </span>
 
                     <ChevronDown className="h-4 w-4 shrink-0 text-muted" />
                   </button>
 
                   {openDropdown === "assignee" && (
-                    <div className="absolute left-0 right-0 top-12 z-50 rounded-xl border border-border bg-card p-1.5 shadow-xl">
-                      {users.map((user) => (
-                        <button
-                          key={user.id}
-                          type="button"
-                          onClick={() => {
-                            field.onChange(user.id);
-                            setOpenDropdown(null);
-                          }}
-                          className="flex w-full flex-col items-start rounded-lg px-3 py-2 text-left hover:cursor-pointer hover:bg-surface-hover"
-                        >
-                          <span className="text-sm text-foreground">
-                            {user.fullName}
-                          </span>
+                    <div className="absolute left-0 right-0 top-12 z-50 rounded-xl border border-border bg-card p-2 shadow-xl">
+                      {/* Search */}
+                      <div className="relative mb-2">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
 
-                          <span className="text-xs text-muted">
-                            {user.email}
-                          </span>
-                        </button>
-                      ))}
+                        <input
+                          type="text"
+                          value={userSearch}
+                          onChange={(e) => setUserSearch(e.target.value)}
+                          placeholder="Search people..."
+                          autoFocus
+                          className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm text-foreground outline-none placeholder:text-muted focus:border-violet-500"
+                        />
+                      </div>
+
+                      {/* Results */}
+                      <div className="max-h-48 overflow-y-auto">
+                        {filteredUsers.length > 0 ? (
+                          filteredUsers.map((user) => (
+                            <button
+                              key={user.id}
+                              type="button"
+                              onClick={() => {
+                                field.onChange(user.id);
+                                setUserSearch("");
+                                setOpenDropdown(null);
+                              }}
+                              className="flex w-full flex-col items-start rounded-lg px-3 py-2 text-left hover:cursor-pointer hover:bg-surface-hover"
+                            >
+                              <span className="text-sm text-foreground">
+                                {user.fullName}
+                              </span>
+
+                              <span className="text-xs text-muted">
+                                {user.email}
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="px-3 py-3 text-sm text-muted">
+                            No people found
+                          </p>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
