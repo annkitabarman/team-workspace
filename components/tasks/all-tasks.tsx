@@ -27,9 +27,16 @@ type Project = {
   projectName: string;
 };
 
+type User = {
+  id: string;
+  fullName: string;
+  email: string;
+};
+
 type TaskClientProp = {
   tasks: Task[];
   projects: Project[];
+  users: User[];
 };
 const statusFilters = [
   { value: "ALL", label: "All" },
@@ -123,7 +130,7 @@ function FilterSelect({
   );
 }
 
-export default function AllTasks({ tasks, projects }: TaskClientProp) {
+export default function AllTasks({ tasks, projects, users }: TaskClientProp) {
   const [selectedStatus, setSelectedStatus] = useState("ALL");
   const [search, setSearch] = useState("");
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -432,6 +439,7 @@ export default function AllTasks({ tasks, projects }: TaskClientProp) {
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
         projects={projects}
+        users={users}
       />
     </div>
   );

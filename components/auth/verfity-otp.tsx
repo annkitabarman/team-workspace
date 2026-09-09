@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useSignUp, useSignIn } from "@clerk/nextjs";
 import { useSearchParams } from "next/navigation";
+import { ensureUser } from "@/app/actions/auth";
 
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 30;
@@ -109,6 +110,7 @@ export default function VerifyOtpPage() {
             }
           },
         });
+        await ensureUser();
 
         return;
       }

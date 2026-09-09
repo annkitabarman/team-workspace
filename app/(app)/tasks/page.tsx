@@ -1,13 +1,14 @@
 import AllTasks from "@/components/tasks/all-tasks";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
+import { getAllUsers } from "@/lib/users";
 
 export default async function Home() {
   const { userId } = await auth();
 
   if (!userId) return null;
 
-  const [allTasks, projects] = await Promise.all([
+  const [allTasks, projects, users] = await Promise.all([
     prisma.task.findMany({
       where: {
         clerkUserId: userId,
@@ -28,7 +29,9 @@ export default async function Home() {
         projectName: "asc",
       },
     }),
+
+    getAllUsers(),
   ]);
 
-  return <AllTasks tasks={allTasks} projects={projects} />;
+  return <AllTasks tasks={allTasks} projects={projects} users={users} />;
 }

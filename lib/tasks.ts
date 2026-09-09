@@ -8,6 +8,7 @@ export type CreateTaskData = {
   priority: "LOW" | "MEDIUM" | "HIGH";
   dueDate?: string;
   projectId?: string;
+  assigneeId: string;
 };
 
 export type CreateTaskDataWithUserId = CreateTaskData & { clerkUserId: string };
@@ -20,6 +21,7 @@ export async function createTask(data: CreateTaskDataWithUserId) {
       type: data.type,
       status: data.status,
       priority: data.priority,
+      assigneeId: data.assigneeId,
       dueDate: data.dueDate ? new Date(data.dueDate) : null,
       clerkUserId: data.clerkUserId,
       projectId: data.projectId || null,
@@ -35,6 +37,10 @@ export async function getManyTasks(clerkUserId: string) {
     orderBy: {
       updatedAt: "desc",
     },
+    include: {
+      project: true,
+      assignee: true,
+    },
   });
 }
 
@@ -45,6 +51,7 @@ export async function getTask(id: string, clerkUserId: string) {
       clerkUserId,
     },
     include: {
+      assignee: true,
       project: true,
     },
   });
