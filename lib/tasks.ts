@@ -7,11 +7,12 @@ export type CreateTaskData = {
   status: "TODO" | "IN_PROGRESS" | "COMPLETED";
   priority: "LOW" | "MEDIUM" | "HIGH";
   dueDate?: string;
-  clerkUserId: string;
   projectId?: string;
 };
 
-export async function createTask(data: CreateTaskData) {
+export type CreateTaskDataWithUserId = CreateTaskData & { clerkUserId: string };
+
+export async function createTask(data: CreateTaskDataWithUserId) {
   const task = await prisma.task.create({
     data: {
       taskName: data.taskName,
@@ -28,7 +29,7 @@ export async function createTask(data: CreateTaskData) {
   return task;
 }
 
-export async function getTasks(clerkUserId: string) {
+export async function getManyTasks(clerkUserId: string) {
   return prisma.task.findMany({
     where: { clerkUserId },
     orderBy: {
@@ -52,7 +53,7 @@ export async function getTask(id: string, clerkUserId: string) {
 export async function updateTask(
   id: string,
   clerkUserId: string,
-  data: CreateTaskData,
+  data: CreateTaskDataWithUserId,
 ) {
   return prisma.task.updateMany({
     where: {

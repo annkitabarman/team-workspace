@@ -1,17 +1,67 @@
 "use client";
 
 import { Calendar, Plus, X } from "lucide-react";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { createTaskAction } from "@/app/actions/tasks";
+import { CreateTaskData } from "@/lib/tasks";
+import { useRouter } from "next/navigation";
 
 type AddTaskModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  projects: {
+    id: string;
+    projectName: string;
+  }[];
 };
 
-export default function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
-  const [type, setType] = useState("Task");
-  const [priority, setPriority] = useState("Medium");
-  const [status, setStatus] = useState("Todo");
+export default function AddTaskModal({
+  isOpen,
+  onClose,
+  projects,
+}: AddTaskModalProps) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<CreateTaskData>({
+    defaultValues: {
+      taskName: "",
+      description: "",
+      projectId: "",
+      type: "TASK",
+      priority: "MEDIUM",
+      status: "TODO",
+      dueDate: "",
+    },
+  });
+  const router = useRouter();
+
+  const onSubmit = async (data: CreateTaskData) => {
+    const payload = {
+      taskName: data.taskName,
+      description: data.description || undefined,
+      projectId: data.projectId || undefined,
+      type: data.type,
+      priority: data.priority,
+      status: data.status,
+      dueDate: data.dueDate || undefined,
+    };
+    try {
+      const createdTask = await createTaskAction(payload);
+      reset();
+      onClose();
+      router.push(`/tasks/${createdTask.id}`);
+    } catch (error) {
+      console.error("Failed to create task:", error);
+    }
+  };
+
+  const handleClose = () => {
+    reset();
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -20,7 +70,7 @@ export default function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       {/* Modal */}
@@ -39,7 +89,7 @@ export default function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="rounded-lg p-2 text-muted transition hover:cursor-pointer hover:bg-surface-hover hover:text-foreground"
           >
             <X className="h-5 w-5" />
@@ -47,23 +97,34 @@ export default function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
         </div>
 
         {/* Form */}
-        <form className="space-y-5 p-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 p-6">
           {/* Task Title */}
           <div>
             <label
-              htmlFor="taskTitle"
+              htmlFor="taskName"
               className="mb-2 block text-sm font-medium text-foreground"
             >
               Task Title
             </label>
 
             <input
-              id="taskTitle"
-              name="taskTitle"
-              required
+              id="taskName"
               placeholder="e.g. Implement authentication"
               className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-violet-500"
+              {...register("taskName", {
+                required: "Task title is required",
+                minLength: {
+                  value: 2,
+                  message: "Task title must be at least 2 characters",
+                },
+              })}
             />
+
+            {errors.taskName && (
+              <p className="mt-1.5 text-xs text-red-400">
+                {errors.taskName.message}
+              </p>
+            )}
           </div>
 
           {/* Description */}
@@ -77,31 +138,35 @@ export default function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
 
             <textarea
               id="description"
-              name="description"
               rows={4}
               placeholder="Describe what needs to be done..."
               className="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-violet-500"
+              {...register("description")}
             />
           </div>
 
           {/* Project */}
           <div>
             <label
-              htmlFor="project"
+              htmlFor="projectId"
               className="mb-2 block text-sm font-medium text-foreground"
             >
               Project
             </label>
 
             <select
-              id="project"
-              name="project"
+              id="projectId"
               className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-violet-500"
+              {...register("projectId")}
             >
               <option value="">No project</option>
-              <option value="team-workspace">Team Workspace</option>
-              <option value="media-tracker">Media Tracker</option>
-              <option value="portfolio">Portfolio</option>
+
+              {/* Replace these with your actual projects */}
+              {projects.map((project) => (
+                <option value={project.id} key={project.id}>
+                  {project.projectName}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -118,14 +183,12 @@ export default function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
 
               <select
                 id="type"
-                name="type"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
                 className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-violet-500"
+                {...register("type")}
               >
-                <option value="Task">Task</option>
-                <option value="Feature">Feature</option>
-                <option value="Bug">Bug</option>
+                <option value="TASK">Task</option>
+                <option value="FEATURE">Feature</option>
+                <option value="BUG">Bug</option>
               </select>
             </div>
 
@@ -140,14 +203,12 @@ export default function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
 
               <select
                 id="priority"
-                name="priority"
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
                 className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-violet-500"
+                {...register("priority")}
               >
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
               </select>
             </div>
           </div>
@@ -165,14 +226,12 @@ export default function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
 
               <select
                 id="status"
-                name="status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
                 className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-violet-500"
+                {...register("status")}
               >
-                <option value="Todo">Todo</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Completed">Completed</option>
+                <option value="TODO">Todo</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
               </select>
             </div>
 
@@ -190,9 +249,9 @@ export default function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
 
                 <input
                   id="dueDate"
-                  name="dueDate"
                   type="date"
                   className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm text-foreground outline-none transition focus:border-violet-500"
+                  {...register("dueDate")}
                 />
               </div>
             </div>
@@ -202,18 +261,21 @@ export default function AddTaskModal({ isOpen, onClose }: AddTaskModalProps) {
           <div className="flex justify-end gap-3 border-t border-border pt-5">
             <button
               type="button"
-              onClick={onClose}
-              className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-muted transition hover:cursor-pointer hover:bg-surface-hover hover:text-foreground"
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-muted transition hover:cursor-pointer hover:bg-surface-hover hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:cursor-pointer hover:bg-violet-500"
+              disabled={isSubmitting}
+              className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:cursor-pointer hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus className="h-4 w-4" />
-              Create Task
+
+              {isSubmitting ? "Creating..." : "Create Task"}
             </button>
           </div>
         </form>

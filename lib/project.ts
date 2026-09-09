@@ -5,10 +5,18 @@ export type CreateProjectData = {
   description?: string;
   githubUrl?: string;
   technologies: string[];
+};
+
+export type CreateProjectWithUserData = CreateProjectData & {
   clerkUserId: string;
 };
 
-export async function createProject(data: CreateProjectData) {
+export async function searchProject(query: string) {
+  console.log(query);
+  return null;
+}
+
+export async function createProject(data: CreateProjectWithUserData) {
   const project = await prisma.project.create({
     data: {
       projectName: data.projectName,
@@ -41,7 +49,7 @@ export async function deleteProject(projectId: string, userId: string) {
 
 export async function updateProject(
   projectId: string,
-  data: CreateProjectData,
+  data: CreateProjectWithUserData,
 ) {
   const project = await prisma.project.findFirst({
     where: {

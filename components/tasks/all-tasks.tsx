@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Calendar,
   CheckCircle2,
   Circle,
   Clock3,
@@ -9,108 +8,49 @@ import {
   ListFilter,
   Plus,
   Search,
-  Sparkles,
-  Bug,
-  MoreHorizontal,
 } from "lucide-react";
 import { useState } from "react";
 import clsx from "clsx";
-import { useRouter } from "next/navigation";
 import AddTaskModal from "../modal-popup/add-task-popup";
+import type { Prisma } from "@prisma/client";
+import TaskRow from "./task-row";
 
-type TaskStatus = "Todo" | "In Progress" | "Completed";
-type TaskType = "Feature" | "Bug" | "Task";
+export type Task = Prisma.TaskGetPayload<{
+  include: {
+    project: true;
+  };
+}>;
 
-type Task = {
-  id: number;
-  title: string;
-  description: string;
-  project: string;
-  type: TaskType;
-  status: TaskStatus;
-  priority: "Low" | "Medium" | "High";
-  dueDate: string;
+type Project = {
+  id: string;
+  projectName: string;
 };
 
-const tasks: Task[] = [
-  {
-    id: 1,
-    title: "Implement project creation",
-    description: "Add the create project modal and connect it to PostgreSQL.",
-    project: "Team Workspace",
-    type: "Feature",
-    status: "In Progress",
-    priority: "High",
-    dueDate: "Today",
-  },
-  {
-    id: 2,
-    title: "Fix authentication redirect",
-    description: "Handle the redirect correctly when an existing user logs in.",
-    project: "Team Workspace",
-    type: "Bug",
-    status: "Todo",
-    priority: "High",
-    dueDate: "Tomorrow",
-  },
-  {
-    id: 3,
-    title: "Build project details page",
-    description: "Create the overview page for individual projects.",
-    project: "Team Workspace",
-    type: "Feature",
-    status: "Todo",
-    priority: "Medium",
-    dueDate: "Aug 15",
-  },
-  {
-    id: 4,
-    title: "Add draggable notes",
-    description: "Allow notes to be moved around the project canvas.",
-    project: "Team Workspace",
-    type: "Feature",
-    status: "Todo",
-    priority: "Medium",
-    dueDate: "Aug 17",
-  },
-  {
-    id: 5,
-    title: "Fix infinite scrolling",
-    description: "Investigate duplicate requests when reaching the bottom.",
-    project: "Media Tracker",
-    type: "Bug",
-    status: "In Progress",
-    priority: "High",
-    dueDate: "Aug 14",
-  },
-  {
-    id: 6,
-    title: "Add ratings",
-    description: "Allow users to rate movies and TV shows.",
-    project: "Media Tracker",
-    type: "Feature",
-    status: "Completed",
-    priority: "Medium",
-    dueDate: "Completed",
-  },
-];
+type TaskClientProp = {
+  tasks: Task[];
+  projects: Project[];
+};
+const statusFilters = [
+  { value: "ALL", label: "All" },
+  { value: "TODO", label: "Todo" },
+  { value: "IN_PROGRESS", label: "In Progress" },
+  { value: "COMPLETED", label: "Completed" },
+] as const;
 
-const statusFilters = ["All", "Todo", "In Progress", "Completed"];
-
-export default function AllTasks() {
-  const [selectedStatus, setSelectedStatus] = useState("All");
+export default function AllTasks({ tasks, projects }: TaskClientProp) {
+  const [selectedStatus, setSelectedStatus] = useState("ALL");
   const [search, setSearch] = useState("");
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   const filteredTasks = tasks.filter((task) => {
     const matchesStatus =
-      selectedStatus === "All" || task.status === selectedStatus;
+      selectedStatus === "ALL" || task.status === selectedStatus;
 
     const searchTerm = search.toLowerCase();
 
     const matchesSearch =
-      task.title.toLowerCase().includes(searchTerm) ||
-      task.project.toLowerCase().includes(searchTerm);
+      task.taskName.toLowerCase().includes(searchTerm) ||
+      (task.project?.projectName.toLowerCase().includes(searchTerm) ?? false);
 
     return matchesStatus && matchesSearch;
   });
@@ -146,19 +86,19 @@ export default function AllTasks() {
 
         <TaskSummary
           label="To Do"
-          value={tasks.filter((t) => t.status === "Todo").length}
+          value={tasks.filter((t) => t.status === "TODO").length}
           icon={<Circle className="h-4 w-4" />}
         />
 
         <TaskSummary
           label="In Progress"
-          value={tasks.filter((t) => t.status === "In Progress").length}
+          value={tasks.filter((t) => t.status === "IN_PROGRESS").length}
           icon={<Clock3 className="h-4 w-4" />}
         />
 
         <TaskSummary
           label="Completed"
-          value={tasks.filter((t) => t.status === "Completed").length}
+          value={tasks.filter((t) => t.status === "COMPLETED").length}
           icon={<CheckCircle2 className="h-4 w-4" />}
         />
       </div>
@@ -186,22 +126,22 @@ export default function AllTasks() {
       <div className="mt-6 flex items-center gap-2 border-b border-border">
         {statusFilters.map((status) => (
           <button
-            key={status}
-            onClick={() => setSelectedStatus(status)}
+            key={status.value}
+            onClick={() => setSelectedStatus(status.value)}
             className={clsx(
-              "border-b-2 px-4 py-3 text-sm font-medium transition",
-              selectedStatus === status
+              "border-b-2 px-4 py-3 text-sm font-medium transition hover:cursor-pointer",
+              selectedStatus === status.value
                 ? "border-violet-500 text-violet-500"
                 : "border-transparent text-muted hover:text-foreground",
             )}
           >
-            {status}
+            {status.label}
           </button>
         ))}
       </div>
 
       {/* Tasks */}
-      <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface">
+      <div className="mt-6 rounded-2xl border border-border bg-surface">
         {/* Table header */}
         <div className="grid grid-cols-[1fr_180px_140px_120px_40px] items-center gap-4 border-b border-border px-5 py-3 text-xs font-medium uppercase tracking-wider text-muted">
           <span>Task</span>
@@ -228,6 +168,7 @@ export default function AllTasks() {
       <AddTaskModal
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
+        projects={projects}
       />
     </div>
   );
@@ -250,80 +191,6 @@ function TaskSummary({
       </div>
 
       <p className="mt-3 text-3xl font-bold text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function TaskRow({ task }: { task: Task }) {
-  const router = useRouter();
-  return (
-    <div className="group grid grid-cols-[1fr_180px_140px_120px_40px] items-center gap-4 border-b border-border px-5 py-4 last:border-b-0 transition hover:bg-surface-hover">
-      {/* Task */}
-      <div className="flex min-w-0 items-start gap-3">
-        <button className="mt-0.5 text-muted transition hover:text-violet-500">
-          {task.status === "Completed" ? (
-            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-          ) : (
-            <Circle className="h-5 w-5" />
-          )}
-        </button>
-
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            {task.type === "Bug" ? (
-              <Bug className="h-4 w-4 shrink-0 text-red-400" />
-            ) : (
-              <Sparkles className="h-4 w-4 shrink-0 text-amber-400" />
-            )}
-
-            <p
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push(`/tasks/${task.id}`);
-              }}
-              className={clsx(
-                "cursor-pointer truncate text-sm font-medium hover:text-violet-400",
-                task.status === "Completed"
-                  ? "text-muted line-through"
-                  : "text-foreground",
-              )}
-            >
-              {task.title}
-            </p>
-          </div>
-
-          <p className="mt-1 truncate text-xs text-muted">{task.description}</p>
-        </div>
-      </div>
-
-      {/* Project */}
-      <span className="truncate text-sm text-muted">{task.project}</span>
-
-      {/* Priority */}
-      <span
-        className={clsx(
-          "w-fit rounded-full border px-3 py-1 text-xs font-medium",
-          task.priority === "High" &&
-            "border-red-500/30 bg-red-500/10 text-red-400",
-          task.priority === "Medium" &&
-            "border-amber-500/30 bg-amber-500/10 text-amber-400",
-          task.priority === "Low" &&
-            "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
-        )}
-      >
-        {task.priority}
-      </span>
-
-      {/* Due date */}
-      <div className="flex items-center gap-2 text-xs text-muted">
-        <Calendar className="h-4 w-4" />
-        {task.dueDate}
-      </div>
-
-      {/* More */}
-      <button className="opacity-0 transition group-hover:opacity-100">
-        <MoreHorizontal className="h-5 w-5 text-muted hover:text-foreground" />
-      </button>
     </div>
   );
 }

@@ -2,19 +2,21 @@
 
 import { AlertTriangle, Trash2, X } from "lucide-react";
 
-type DeleteProjectModalProps = {
+type DeleteItemModalProps = {
   isOpen: boolean;
-  projectName: string;
+  itemName: string;
+  itemType: string;
   onClose: () => void;
   onConfirm: () => void;
 };
 
-export default function DeleteProjectModal({
+export default function DeleteItemModal({
   isOpen,
-  projectName,
+  itemName,
+  itemType,
   onClose,
   onConfirm,
-}: DeleteProjectModalProps) {
+}: DeleteItemModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -29,7 +31,7 @@ export default function DeleteProjectModal({
 
             <div>
               <h2 className="text-lg font-semibold text-foreground">
-                Delete Project
+                Delete {itemType}
               </h2>
 
               <p className="mt-1 text-xs text-muted">
@@ -51,8 +53,8 @@ export default function DeleteProjectModal({
         <div className="px-6 py-5">
           <p className="text-sm leading-6 text-muted">
             Are you sure you want to delete{" "}
-            <span className="font-semibold text-foreground">{projectName}</span>
-            ? All project data associated with it will be permanently removed.
+            <span className="font-semibold text-foreground">{itemName}</span>?
+            All data associated with it will be permanently removed.
           </p>
         </div>
 

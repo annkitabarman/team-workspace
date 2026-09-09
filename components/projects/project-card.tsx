@@ -8,13 +8,12 @@ import {
   MoreHorizontal,
   ExternalLink,
   Pencil,
-  Archive,
   Trash2,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { deleteProjectAction } from "@/app/actions/project";
-import DeleteProjectModal from "../modal-popup/delete-project-popup";
+import DeleteItemModal from "../modal-popup/delete-item-popup";
 
 type ProjectCardProps = {
   id: string;
@@ -55,11 +54,11 @@ export default function ProjectCard({
       action: "edit",
       icon: Pencil,
     },
-    {
-      label: "Archive",
-      action: "archive",
-      icon: Archive,
-    },
+    // {
+    //   label: "Archive",
+    //   action: "archive",
+    //   icon: Archive,
+    // },
   ];
 
   useEffect(() => {
@@ -205,9 +204,10 @@ export default function ProjectCard({
       </div>
 
       {/* Delete modal */}
-      <DeleteProjectModal
+      <DeleteItemModal
         isOpen={deleteModalOpen}
-        projectName={name}
+        itemName={name}
+        itemType="Project"
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={async () => {
           await deleteProjectAction(id);
