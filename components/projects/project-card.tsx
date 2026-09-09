@@ -4,7 +4,7 @@ import {
   FolderKanban,
   Bug,
   Sparkles,
-  CheckCircle2,
+  ListTodo,
   MoreHorizontal,
   ExternalLink,
   Pencil,
@@ -22,7 +22,7 @@ type ProjectCardProps = {
   technologies: string[];
   bugs: number;
   features: number;
-  completed: number;
+  tasks: number;
   updatedAt: string;
   onEdit: () => void;
 };
@@ -34,7 +34,7 @@ export default function ProjectCard({
   technologies,
   bugs,
   features,
-  completed,
+  tasks,
   updatedAt,
   onEdit,
 }: ProjectCardProps) {
@@ -181,19 +181,25 @@ export default function ProjectCard({
 
         {/* Stats */}
         <div className="mt-6 flex items-center gap-6 text-sm">
-          <div className="flex items-center gap-1 text-red-400">
+          <div className="flex items-center gap-1 text-red-400" title="Bugs">
             <Bug className="h-4 w-4" />
             {bugs}
           </div>
 
-          <div className="flex items-center gap-1 text-amber-400">
+          <div
+            className="flex items-center gap-1 text-amber-400"
+            title="Features"
+          >
             <Sparkles className="h-4 w-4" />
             {features}
           </div>
 
-          <div className="flex items-center gap-1 text-emerald-400">
-            <CheckCircle2 className="h-4 w-4" />
-            {completed}
+          <div
+            className="flex items-center gap-1 text-emerald-400"
+            title="Tasks"
+          >
+            <ListTodo className="h-4 w-4" />
+            {tasks}
           </div>
         </div>
 

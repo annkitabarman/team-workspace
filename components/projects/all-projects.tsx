@@ -14,6 +14,11 @@ type Project = {
   clerkUserId: string;
   createdAt: Date;
   updatedAt: Date;
+  taskCounts: {
+    bugs: number;
+    features: number;
+    tasks: number;
+  };
 };
 
 type ProjectsClientProps = {
@@ -67,9 +72,9 @@ export default function AllProjects({ projects }: ProjectsClientProps) {
               name={project.projectName}
               description={project.description ?? ""}
               technologies={project.technologies}
-              bugs={0}
-              features={0}
-              completed={0}
+              bugs={project.taskCounts.bugs}
+              features={project.taskCounts.features}
+              tasks={project.taskCounts.tasks}
               updatedAt={project.updatedAt.toLocaleDateString("en-GB")}
               onEdit={() => {
                 setEditingProject(project);
