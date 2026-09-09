@@ -8,8 +8,9 @@ import {
   ListFilter,
   Plus,
   Search,
+  ChevronDown,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import clsx from "clsx";
 import AddTaskModal from "../modal-popup/add-task-popup";
 import type { Prisma } from "@prisma/client";
@@ -37,23 +38,172 @@ const statusFilters = [
   { value: "COMPLETED", label: "Completed" },
 ] as const;
 
+type FilterSelectProps = {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: [string, string][];
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+};
+
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  options,
+  isOpen,
+  onToggle,
+  onClose,
+}: FilterSelectProps) {
+  const selectedOption =
+    options.find(([optionValue]) => optionValue === value)?.[1] ??
+    options[0][1];
+
+  return (
+    <div className="mb-3 last:mb-0">
+      <label className="mb-1.5 block text-xs font-medium text-muted">
+        {label}
+      </label>
+
+      <div className="relative">
+        <button
+          type="button"
+          onClick={onToggle}
+          className={clsx(
+            "flex h-10 w-full items-center justify-between rounded-lg border px-3 text-sm transition hover:cursor-pointer",
+            isOpen
+              ? "border-violet-500 bg-surface-hover text-foreground"
+              : "border-border bg-surface text-foreground hover:bg-surface-hover",
+          )}
+        >
+          <span>{selectedOption}</span>
+
+          <ChevronDown
+            className={clsx(
+              "h-4 w-4 text-muted transition-transform",
+              isOpen && "rotate-180",
+            )}
+          />
+        </button>
+
+        {isOpen && (
+          <div className="absolute left-0 right-0 top-11 z-50 rounded-xl border border-border bg-background p-1.5 shadow-xl">
+            {options.map(([optionValue, optionLabel]) => {
+              const isSelected = value === optionValue;
+
+              return (
+                <button
+                  key={optionValue}
+                  type="button"
+                  onClick={() => {
+                    onChange(optionValue);
+                    onClose();
+                  }}
+                  className={clsx(
+                    "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition hover:cursor-pointer",
+                    isSelected
+                      ? "bg-violet-500/10 text-violet-400"
+                      : "text-foreground hover:bg-surface-hover",
+                  )}
+                >
+                  <span>{optionLabel}</span>
+
+                  {isSelected && (
+                    <CheckCircle2 className="h-4 w-4 text-violet-400" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AllTasks({ tasks, projects }: TaskClientProp) {
   const [selectedStatus, setSelectedStatus] = useState("ALL");
   const [search, setSearch] = useState("");
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [openFilter, setOpenFilter] = useState<string | null>(null);
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  const [filters, setFilters] = useState({
+    type: "ALL",
+    priority: "ALL",
+    dueDate: "ALL",
+  });
 
   const filteredTasks = tasks.filter((task) => {
-    const matchesStatus =
-      selectedStatus === "ALL" || task.status === selectedStatus;
-
+    // Search
     const searchTerm = search.toLowerCase();
-
     const matchesSearch =
       task.taskName.toLowerCase().includes(searchTerm) ||
       (task.project?.projectName.toLowerCase().includes(searchTerm) ?? false);
 
-    return matchesStatus && matchesSearch;
+    // Type
+    const matchesType = filters.type === "ALL" || task.type === filters.type;
+
+    // Priority
+    const matchesPriority =
+      filters.priority === "ALL" || task.priority === filters.priority;
+
+    // Due date
+    let matchesDueDate = true;
+
+    if (filters.dueDate !== "ALL") {
+      if (filters.dueDate === "NONE") {
+        matchesDueDate = task.dueDate === null;
+      } else if (task.dueDate) {
+        const today = new Date();
+        const dueDate = new Date(task.dueDate);
+
+        today.setHours(0, 0, 0, 0);
+        dueDate.setHours(0, 0, 0, 0);
+
+        if (filters.dueDate === "OVERDUE") {
+          matchesDueDate = dueDate < today && task.status !== "COMPLETED";
+        }
+
+        if (filters.dueDate === "TODAY") {
+          matchesDueDate = dueDate.getTime() === today.getTime();
+        }
+
+        if (filters.dueDate === "UPCOMING") {
+          matchesDueDate = dueDate > today && task.status !== "COMPLETED";
+        }
+      } else {
+        matchesDueDate = false;
+      }
+    }
+
+    return matchesSearch && matchesType && matchesPriority && matchesDueDate;
   });
+
+  const activeFilterCount = Object.values(filters).filter(
+    (value) => value !== "ALL",
+  ).length;
+
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      if (
+        filterRef.current &&
+        !filterRef.current.contains(event.target as Node)
+      ) {
+        setIsFilterOpen(false);
+        setOpenFilter(null);
+      }
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
 
   return (
     <div className="px-8 py-8">
@@ -116,10 +266,123 @@ export default function AllTasks({ tasks, projects }: TaskClientProp) {
           />
         </div>
 
-        <button className="flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2 text-sm text-muted transition hover:bg-surface-hover hover:text-foreground">
-          <Filter className="h-4 w-4" />
-          Filter
-        </button>
+        <div className="relative" ref={filterRef}>
+          <button
+            type="button"
+            onClick={() => setIsFilterOpen((prev) => !prev)}
+            className={clsx(
+              "flex items-center gap-2 rounded-xl border px-4 py-2 text-sm transition hover:cursor-pointer",
+              isFilterOpen
+                ? "border-violet-500/40 bg-surface-hover text-foreground"
+                : "border-border bg-surface text-muted hover:bg-surface-hover hover:text-foreground",
+            )}
+          >
+            <Filter className="h-4 w-4" />
+            Filter
+            {activeFilterCount > 0 && (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-500 px-1.5 text-[11px] font-semibold text-white">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+
+          {isFilterOpen && (
+            <div className="absolute right-0 top-12 z-50 w-72 rounded-2xl border border-border bg-background p-4 shadow-2xl">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Filter tasks
+                </h3>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilters({
+                      type: "ALL",
+                      priority: "ALL",
+                      dueDate: "ALL",
+                    });
+
+                    setOpenFilter(null);
+                  }}
+                  className="text-xs text-muted transition hover:text-foreground hover:cursor-pointer"
+                >
+                  Clear all
+                </button>
+              </div>
+
+              <FilterSelect
+                label="Type"
+                value={filters.type}
+                options={[
+                  ["ALL", "All"],
+                  ["TASK", "Task"],
+                  ["FEATURE", "Feature"],
+                  ["BUG", "Bug"],
+                ]}
+                isOpen={openFilter === "type"}
+                onToggle={() =>
+                  setOpenFilter((prev) => (prev === "type" ? null : "type"))
+                }
+                onClose={() => setOpenFilter(null)}
+                onChange={(value) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    type: value,
+                  }))
+                }
+              />
+
+              <FilterSelect
+                label="Priority"
+                value={filters.priority}
+                options={[
+                  ["ALL", "All"],
+                  ["LOW", "Low"],
+                  ["MEDIUM", "Medium"],
+                  ["HIGH", "High"],
+                ]}
+                isOpen={openFilter === "priority"}
+                onToggle={() =>
+                  setOpenFilter((prev) =>
+                    prev === "priority" ? null : "priority",
+                  )
+                }
+                onClose={() => setOpenFilter(null)}
+                onChange={(value) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    priority: value,
+                  }))
+                }
+              />
+
+              <FilterSelect
+                label="Due date"
+                value={filters.dueDate}
+                options={[
+                  ["ALL", "Any"],
+                  ["OVERDUE", "Overdue"],
+                  ["TODAY", "Due today"],
+                  ["UPCOMING", "Upcoming"],
+                  ["NONE", "No due date"],
+                ]}
+                isOpen={openFilter === "dueDate"}
+                onToggle={() =>
+                  setOpenFilter((prev) =>
+                    prev === "dueDate" ? null : "dueDate",
+                  )
+                }
+                onClose={() => setOpenFilter(null)}
+                onChange={(value) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    dueDate: value,
+                  }))
+                }
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Status filters */}

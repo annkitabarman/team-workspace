@@ -9,6 +9,7 @@ import {
   Sparkles,
   Calendar,
   MoreHorizontal,
+  ListTodo,
 } from "lucide-react";
 import clsx from "clsx";
 import DeleteItemModal from "../modal-popup/delete-item-popup";
@@ -48,11 +49,13 @@ export default function TaskRow({ task }: { task: Task }) {
           </button>
 
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" title={task.type}>
               {task.type === "BUG" ? (
                 <Bug className="h-4 w-4 shrink-0 text-red-400" />
-              ) : (
+              ) : task.type === "FEATURE" ? (
                 <Sparkles className="h-4 w-4 shrink-0 text-amber-400" />
+              ) : (
+                <ListTodo className="h-4 w-4 shrink-0 text-blue-400" />
               )}
 
               <p
