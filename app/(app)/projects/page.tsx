@@ -1,5 +1,4 @@
 import AllProjects from "@/components/projects/all-projects";
-
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 

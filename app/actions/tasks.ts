@@ -5,6 +5,7 @@ import {
   CreateTaskData,
   getManyTasks,
   deleteTask,
+  updateReproSteps,
 } from "@/lib/tasks";
 import { getAuthenticatedUser } from "./auth";
 import { prisma } from "@/lib/prisma";
@@ -40,4 +41,25 @@ export async function deleteTaskAction(taskId: string) {
 
   await deleteTask(taskId, userId);
   revalidatePath("/tasks");
+}
+
+export async function updateReproStepsAction(
+  taskId: string,
+  reproSteps: string,
+) {
+  const clerkUserId = await getAuthenticatedUser();
+
+  const user = await prisma.user.findUnique({
+    where: {
+      clerkUserId,
+    },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  await updateReproSteps(taskId, user.id, reproSteps);
+
+  revalidatePath(`/tasks/${taskId}`);
 }

@@ -87,3 +87,29 @@ export async function deleteTask(id: string, clerkUserId: string) {
     },
   });
 }
+
+export async function updateReproSteps(
+  taskId: string,
+  assigneeId: string,
+  reproSteps: string,
+) {
+  const task = await prisma.task.findFirst({
+    where: {
+      id: taskId,
+      assigneeId,
+    },
+  });
+
+  if (!task) {
+    throw new Error("You are not assigned to this task");
+  }
+
+  return prisma.task.update({
+    where: {
+      id: taskId,
+    },
+    data: {
+      reproSteps: reproSteps || null,
+    },
+  });
+}

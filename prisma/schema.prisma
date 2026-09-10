@@ -39,6 +39,7 @@ model Task {
   id          String       @id @default(cuid())
   taskName    String
   description String?
+  reproSteps  String?
   type        TaskType     @default(TASK)
   status      TaskStatus   @default(TODO)
   priority    TaskPriority @default(MEDIUM)
