@@ -9,12 +9,11 @@ import {
   Sparkles,
   User,
   UserRound,
-  Check,
   Pencil,
-  X,
 } from "lucide-react";
 import { useState } from "react";
 import { updateReproStepsAction } from "@/app/actions/tasks";
+import ReproStepsEditor from "./repro-steps-editor";
 
 // type Task = {
 //   id: string;
@@ -68,7 +67,6 @@ type TaskDetailsProps = {
 
 export default function TaskDetails({ task, canEdit }: TaskDetailsProps) {
   const [isEditingReproSteps, setIsEditingReproSteps] = useState(false);
-  const [reproSteps, setReproSteps] = useState(task.reproSteps ?? "");
   return (
     <div className="px-8 py-8">
       {/* Back */}
@@ -128,7 +126,7 @@ export default function TaskDetails({ task, canEdit }: TaskDetailsProps) {
           <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
-              className="flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium text-muted transition hover:bg-surface-hover hover:text-foreground"
+              className="flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium text-muted transition hover:bg-surface-hover hover:text-foreground hover:cursor-pointer"
             >
               <Pencil className="h-4 w-4" />
               Edit
@@ -136,7 +134,7 @@ export default function TaskDetails({ task, canEdit }: TaskDetailsProps) {
 
             <button
               type="button"
-              className="rounded-xl border border-border bg-background p-2 text-muted transition hover:bg-surface-hover hover:text-foreground"
+              className="rounded-xl border border-border bg-background p-2 text-muted transition hover:bg-surface-hover hover:text-foreground hover:cursor-pointer"
             >
               <MoreHorizontal className="h-5 w-5" />
             </button>
@@ -148,7 +146,7 @@ export default function TaskDetails({ task, canEdit }: TaskDetailsProps) {
       <div className="mt-6 grid grid-cols-3 gap-6">
         {/* Left */}
         <div className="col-span-2 space-y-6">
-          <section className="rounded-2xl border border-border bg-surface p-6">
+          <section className="rounded-2xl border border-border bg-surface p-6 min-h-96">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-foreground">
                 Repro Steps
@@ -159,6 +157,7 @@ export default function TaskDetails({ task, canEdit }: TaskDetailsProps) {
                   type="button"
                   onClick={() => setIsEditingReproSteps(true)}
                   className="rounded-lg p-2 text-muted transition hover:bg-surface-hover hover:text-foreground hover:cursor-pointer"
+                  title="Edit repro steps"
                 >
                   <Pencil className="h-4 w-4" />
                 </button>
@@ -166,53 +165,51 @@ export default function TaskDetails({ task, canEdit }: TaskDetailsProps) {
             </div>
 
             {isEditingReproSteps && canEdit ? (
-              <div className="mt-4">
-                <textarea
-                  value={reproSteps}
-                  onChange={(e) => setReproSteps(e.target.value)}
-                  autoFocus
-                  className="min-h-40 w-full resize-y rounded-xl border border-border bg-background px-4 py-3 text-sm leading-7 text-foreground outline-none placeholder:text-muted focus:border-violet-500"
-                />
-
-                <div className="mt-3 flex items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setReproSteps(task.reproSteps ?? "");
-                      setIsEditingReproSteps(false);
-                    }}
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted transition hover:bg-surface-hover hover:text-foreground hover:cursor-pointer"
-                  >
-                    <X className="h-4 w-4" />
-                    Cancel
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      await updateReproStepsAction(task.id, reproSteps);
-                      setIsEditingReproSteps(false);
-                    }}
-                    className="flex items-center gap-2 rounded-lg bg-violet-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-violet-600 hover:cursor-pointer"
-                  >
-                    <Check className="h-4 w-4" />
-                    Save
-                  </button>
-                </div>
-              </div>
+              <ReproStepsEditor
+                initialContent={task.reproSteps ?? ""}
+                onSave={async (content) => {
+                  await updateReproStepsAction(task.id, content);
+                  setIsEditingReproSteps(false);
+                }}
+                onCancel={() => {
+                  setIsEditingReproSteps(false);
+                }}
+              />
             ) : (
               <button
                 type="button"
-                onClick={() => setIsEditingReproSteps(true)}
-                className="mt-4 block w-full rounded-xl border border-transparent p-4 text-left transition hover:border-border hover:bg-background/50"
+                disabled={!canEdit}
+                onClick={() => {
+                  if (canEdit) {
+                    setIsEditingReproSteps(true);
+                  }
+                }}
+                className={`mt-4 min-h-80 flex items-start w-full rounded-xl border border-transparent p-4 text-left transition hover:cursor-pointer ${
+                  canEdit
+                    ? "hover:border-border hover:bg-background/50"
+                    : "cursor-default"
+                }`}
               >
                 {task.reproSteps ? (
-                  <p className="whitespace-pre-wrap text-sm leading-7 text-muted">
-                    {task.reproSteps}
-                  </p>
+                  <div
+                    className="
+            prose prose-sm max-w-none
+            text-muted
+            prose-p:leading-7
+            prose-strong:text-foreground
+            prose-em:text-foreground
+            prose-a:text-violet-400
+            prose-code:text-violet-300
+          "
+                    dangerouslySetInnerHTML={{
+                      __html: task.reproSteps,
+                    }}
+                  />
                 ) : (
                   <p className="text-sm text-muted">
-                    {canEdit ? "Click to add repro steps..." : ""}
+                    {canEdit
+                      ? "Click to add repro steps..."
+                      : "No repro steps have been added."}
                   </p>
                 )}
               </button>

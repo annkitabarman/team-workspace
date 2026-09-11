@@ -97,7 +97,6 @@ export default function AddTaskModal({
       status: data.status,
       dueDate: data.dueDate || undefined,
     };
-    console.log(payload);
     try {
       const createdTask = await createTaskAction(payload);
       reset();

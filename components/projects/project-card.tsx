@@ -54,11 +54,6 @@ export default function ProjectCard({
       action: "edit",
       icon: Pencil,
     },
-    // {
-    //   label: "Archive",
-    //   action: "archive",
-    //   icon: Archive,
-    // },
   ];
 
   useEffect(() => {
@@ -127,10 +122,6 @@ export default function ProjectCard({
 
                         if (menu.action === "edit") {
                           onEdit();
-                        }
-
-                        if (menu.action === "archive") {
-                          console.log("archive", id);
                         }
                       }}
                     >
