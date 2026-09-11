@@ -41,7 +41,17 @@ export default function TaskRow({ task }: { task: Task }) {
       <div className="group grid grid-cols-[1fr_180px_140px_120px_40px] items-center gap-4 border-b border-border px-5 py-4 last:border-b-0 transition hover:bg-surface-hover">
         {/* Task */}
         <div className="flex min-w-0 items-start gap-3">
-          <button className="mt-0.5 text-muted transition hover:text-violet-500">
+          <button
+            type="button"
+            title={
+              task.status === "COMPLETED"
+                ? "Completed"
+                : task.status === "IN_PROGRESS"
+                  ? "In Progress"
+                  : "Todo"
+            }
+            className="mt-0.5 text-muted transition hover:text-violet-500"
+          >
             {task.status === "COMPLETED" ? (
               <CheckCircle2 className="h-5 w-5 text-emerald-500" />
             ) : task.status === "IN_PROGRESS" ? (
@@ -126,6 +136,20 @@ export default function TaskRow({ task }: { task: Task }) {
 
           {isMenuOpen && (
             <div className="absolute right-0 bottom-9 overflow-hidden z-50 w-40 rounded-xl border border-border bg-background p-1 shadow-xl">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  // TODO: toggle task status
+                }}
+                className="w-full rounded-lg px-3 py-2 text-left text-sm text-foreground transition hover:bg-surface-hover hover:cursor-pointer"
+              >
+                {task.status === "COMPLETED"
+                  ? "Mark as incomplete"
+                  : "Mark as completed"}
+              </button>
+
+              <div className="my-1 border-t border-border" />
               <button
                 type="button"
                 onClick={() => {
