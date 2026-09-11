@@ -127,43 +127,6 @@ export default function TaskRow({ task }: { task: Task }) {
                 type="button"
                 onClick={() => {
                   setIsMenuOpen(false);
-                  router.push(`/tasks/${task.id}`);
-                }}
-                className="w-full rounded-lg px-3 py-2 text-left text-sm text-foreground transition hover:bg-surface-hover hover:cursor-pointer"
-              >
-                Open
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  // TODO: open edit modal
-                }}
-                className="w-full rounded-lg px-3 py-2 text-left text-sm text-foreground transition hover:bg-surface-hover hover:cursor-pointer"
-              >
-                Edit
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  // TODO: toggle task status
-                }}
-                className="w-full rounded-lg px-3 py-2 text-left text-sm text-foreground transition hover:bg-surface-hover hover:cursor-pointer"
-              >
-                {task.status === "COMPLETED"
-                  ? "Mark as incomplete"
-                  : "Mark as completed"}
-              </button>
-
-              <div className="my-1 border-t border-border" />
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMenuOpen(false);
                   setDeleteModalOpen(true);
                 }}
                 className="w-full rounded-lg px-3 py-2 text-left text-sm text-red-400 transition hover:bg-red-500/10 hover:cursor-pointer"

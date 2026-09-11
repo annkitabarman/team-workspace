@@ -21,7 +21,7 @@ type AddProjectModalProps = {
   };
 };
 
-export default function AddProjectModal({
+export default function AddEditProjectModal({
   isOpen,
   onClose,
   mode,

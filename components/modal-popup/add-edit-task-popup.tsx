@@ -2,31 +2,53 @@
 
 import { Calendar, Plus, X, ChevronDown, Search } from "lucide-react";
 import { useForm, useWatch, Controller } from "react-hook-form";
-import { createTaskAction } from "@/app/actions/tasks";
+import { createTaskAction, updateTaskAction } from "@/app/actions/tasks";
 import { CreateTaskData } from "@/lib/tasks";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-type AddTaskModalProps = {
+type Task = {
+  id: string;
+  taskName: string;
+  description: string | null;
+  projectId: string | null;
+  assigneeId: string;
+  type: "TASK" | "FEATURE" | "BUG";
+  priority: "LOW" | "MEDIUM" | "HIGH";
+  status: "TODO" | "IN_PROGRESS" | "COMPLETED";
+  dueDate: Date | null;
+};
+
+type AddEditTaskModalProps = {
+  mode: "create" | "edit";
   isOpen: boolean;
   onClose: () => void;
+
   projects: {
     id: string;
     projectName: string;
   }[];
+
   users: {
     id: string;
     fullName: string;
     email: string;
   }[];
+
+  task?: Task;
 };
 
-export default function AddTaskModal({
+export default function AddEditTaskModal({
+  mode,
   isOpen,
   onClose,
   projects,
   users,
-}: AddTaskModalProps) {
+  task,
+}: AddEditTaskModalProps) {
+  const router = useRouter();
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [userSearch, setUserSearch] = useState("");
   const {
     register,
     handleSubmit,
@@ -46,9 +68,36 @@ export default function AddTaskModal({
       dueDate: "",
     },
   });
-  const router = useRouter();
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [userSearch, setUserSearch] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (mode === "edit" && task) {
+      reset({
+        taskName: task.taskName,
+        description: task.description ?? "",
+        projectId: task.projectId ?? "",
+        assigneeId: task.assigneeId,
+        type: task.type,
+        priority: task.priority,
+        status: task.status,
+        dueDate: task.dueDate
+          ? new Date(task.dueDate).toISOString().split("T")[0]
+          : "",
+      });
+    } else {
+      reset({
+        taskName: "",
+        description: "",
+        projectId: "",
+        assigneeId: "",
+        type: "TASK",
+        priority: "MEDIUM",
+        status: "TODO",
+        dueDate: "",
+      });
+    }
+  }, [isOpen, mode, task, reset]);
 
   const filteredUsers = users.filter((user) => {
     const search = userSearch.toLowerCase();
@@ -97,13 +146,28 @@ export default function AddTaskModal({
       status: data.status,
       dueDate: data.dueDate || undefined,
     };
+
     try {
-      const createdTask = await createTaskAction(payload);
+      if (mode === "edit" && task) {
+        await updateTaskAction(task.id, payload);
+      } else {
+        const createdTask = await createTaskAction(payload);
+
+        reset();
+        onClose();
+
+        router.push(`/tasks/${createdTask.id}`);
+        return;
+      }
+
       reset();
       onClose();
-      router.push(`/tasks/${createdTask.id}`);
+      router.refresh();
     } catch (error) {
-      console.error("Failed to create task:", error);
+      console.error(
+        mode === "edit" ? "Failed to update task:" : "Failed to create task:",
+        error,
+      );
     }
   };
 
@@ -130,11 +194,13 @@ export default function AddTaskModal({
         <div className="flex items-start justify-between border-b border-border px-6 py-5">
           <div>
             <h2 className="text-xl font-semibold text-foreground">
-              Create New Task
+              {mode === "edit" ? "Edit Task" : "Create New Task"}
             </h2>
 
             <p className="mt-1 text-sm text-muted">
-              Add a task to your workspace.
+              {mode === "edit"
+                ? "Update the task details."
+                : "Add a task to your workspace."}
             </p>
           </div>
 
@@ -548,7 +614,13 @@ export default function AddTaskModal({
             >
               <Plus className="h-4 w-4" />
 
-              {isSubmitting ? "Creating..." : "Create Task"}
+              {isSubmitting
+                ? mode === "edit"
+                  ? "Saving..."
+                  : "Creating..."
+                : mode === "edit"
+                  ? "Save Changes"
+                  : "Create Task"}
             </button>
           </div>
         </form>

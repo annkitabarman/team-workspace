@@ -6,6 +6,7 @@ import {
   getManyTasks,
   deleteTask,
   updateReproSteps,
+  updateTask,
 } from "@/lib/tasks";
 import { getAuthenticatedUser } from "./auth";
 import { prisma } from "@/lib/prisma";
@@ -62,4 +63,53 @@ export async function updateReproStepsAction(
   await updateReproSteps(taskId, user.id, reproSteps);
 
   revalidatePath(`/tasks/${taskId}`);
+}
+
+export async function updateTaskAction(id: string, data: CreateTaskData) {
+  const clerkUserId = await getAuthenticatedUser();
+
+  const currentUser = await prisma.user.findUnique({
+    where: {
+      clerkUserId: clerkUserId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!currentUser) {
+    throw new Error("User not found");
+  }
+
+  const task = await prisma.task.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      assigneeId: true,
+    },
+  });
+
+  if (!task) {
+    throw new Error("Task not found");
+  }
+
+  if (currentUser.id !== task.assigneeId) {
+    throw new Error("You are not allowed to edit this task");
+  }
+
+  const result = await updateTask(id, clerkUserId, {
+    ...data,
+    clerkUserId: clerkUserId,
+  });
+
+  if (result.count === 0) {
+    throw new Error("Task could not be updated");
+  }
+
+  revalidatePath(`/tasks/${id}`);
+  revalidatePath("/tasks");
+  revalidatePath("/projects");
+
+  return result;
 }

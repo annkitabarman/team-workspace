@@ -16,6 +16,13 @@ export async function searchProject(query: string) {
   return null;
 }
 
+export async function getProjects(clerkUserId: string) {
+  return prisma.project.findMany({
+    where: { clerkUserId },
+    orderBy: { projectName: "asc" },
+  });
+}
+
 export async function createProject(data: CreateProjectWithUserData) {
   const project = await prisma.project.create({
     data: {

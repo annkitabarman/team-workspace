@@ -68,7 +68,13 @@ export async function updateTask(
       clerkUserId,
     },
     data: {
-      ...data,
+      taskName: data.taskName,
+      description: data.description || null,
+      projectId: data.projectId || null,
+      assigneeId: data.assigneeId,
+      type: data.type,
+      priority: data.priority,
+      status: data.status,
       dueDate:
         data.dueDate === undefined
           ? undefined

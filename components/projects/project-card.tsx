@@ -6,8 +6,6 @@ import {
   Sparkles,
   ListTodo,
   MoreHorizontal,
-  ExternalLink,
-  Pencil,
   Trash2,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -24,7 +22,6 @@ type ProjectCardProps = {
   features: number;
   tasks: number;
   updatedAt: string;
-  onEdit: () => void;
 };
 
 export default function ProjectCard({
@@ -36,25 +33,11 @@ export default function ProjectCard({
   features,
   tasks,
   updatedAt,
-  onEdit,
 }: ProjectCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-
-  const menuItems = [
-    {
-      label: "Open",
-      action: "open",
-      icon: ExternalLink,
-    },
-    {
-      label: "Edit",
-      action: "edit",
-      icon: Pencil,
-    },
-  ];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -105,34 +88,6 @@ export default function ProjectCard({
                 onClick={(e) => e.stopPropagation()}
                 className="absolute right-0 top-9 z-50 w-44 overflow-hidden rounded-xl border border-border bg-background py-1 shadow-xl"
               >
-                {menuItems.map((menu) => {
-                  const Icon = menu.icon;
-
-                  return (
-                    <button
-                      key={menu.action}
-                      type="button"
-                      className="flex w-full items-center gap-3 px-3 py-2 text-sm text-muted transition hover:cursor-pointer hover:bg-surface-hover hover:text-foreground"
-                      onClick={() => {
-                        setMenuOpen(false);
-
-                        if (menu.action === "open") {
-                          router.push(`/projects/${id}`);
-                        }
-
-                        if (menu.action === "edit") {
-                          onEdit();
-                        }
-                      }}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {menu.label}
-                    </button>
-                  );
-                })}
-
-                <div className="my-1 border-t border-border" />
-
                 {/* Delete */}
                 <button
                   type="button"

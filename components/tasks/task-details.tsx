@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   Calendar,
   Clock3,
-  MoreHorizontal,
   Sparkles,
   User,
   UserRound,
@@ -14,6 +13,8 @@ import {
 import { useState } from "react";
 import { updateReproStepsAction } from "@/app/actions/tasks";
 import ReproStepsEditor from "./repro-steps-editor";
+import { useRouter } from "next/navigation";
+import AddEditTaskModal from "../modal-popup/add-edit-task-popup";
 
 // type Task = {
 //   id: string;
@@ -58,141 +59,159 @@ type Task = {
     fullName: string;
     email: string;
   };
+  projectId: string | null;
+  assigneeId: string;
 };
 
 type TaskDetailsProps = {
   task: Task;
   canEdit: boolean;
+
+  projects: {
+    id: string;
+    projectName: string;
+  }[];
+
+  users: {
+    id: string;
+    fullName: string;
+    email: string;
+  }[];
 };
 
-export default function TaskDetails({ task, canEdit }: TaskDetailsProps) {
+export default function TaskDetails({
+  task,
+  canEdit,
+  projects,
+  users,
+}: TaskDetailsProps) {
   const [isEditingReproSteps, setIsEditingReproSteps] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const router = useRouter();
   return (
-    <div className="px-8 py-8">
-      {/* Back */}
-      <Link
-        href="/tasks"
-        className="inline-flex items-center gap-2 text-sm text-muted transition hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Tasks
-      </Link>
+    <>
+      <div className="px-8 py-8">
+        {/* Back */}
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 text-sm text-muted transition hover:text-foreground hover:cursor-pointer"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
 
-      {/* Header */}
-      <div className="mt-6 rounded-2xl border border-border bg-surface p-6">
-        <div className="flex items-start justify-between gap-6">
-          <div className="min-w-0">
-            {/* Type */}
-            <div className="flex items-center gap-2">
-              <div className="rounded-lg bg-amber-500/10 p-2">
-                <Sparkles className="h-4 w-4 text-amber-400" />
+        {/* Header */}
+        <div className="mt-6 rounded-2xl border border-border bg-surface p-6">
+          <div className="flex items-start justify-between gap-6">
+            <div className="min-w-0">
+              {/* Type */}
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-amber-500/10 p-2">
+                  <Sparkles className="h-4 w-4 text-amber-400" />
+                </div>
+
+                <span className="text-xs font-semibold uppercase tracking-wider text-amber-400">
+                  {task.type}
+                </span>
               </div>
 
-              <span className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-                {task.type}
-              </span>
+              {/* Title */}
+              <h1 className="mt-4 text-3xl font-bold text-foreground">
+                {task.taskName}
+              </h1>
+
+              {/* Description */}
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
+                {task.description || "No description added"}
+              </p>
+
+              {/* Tags */}
+              <div className="mt-5 flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-medium text-red-400">
+                  {task.priority}
+                </span>
+
+                <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-400">
+                  {task.status}
+                </span>
+
+                <Link
+                  href={`/projects/${task.project?.id}`}
+                  className="rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-muted transition hover:border-violet-500/40 hover:text-foreground"
+                >
+                  {task.project?.projectName}
+                </Link>
+              </div>
             </div>
 
-            {/* Title */}
-            <h1 className="mt-4 text-3xl font-bold text-foreground">
-              {task.taskName}
-            </h1>
-
-            {/* Description */}
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
-              {task.description || "No description added"}
-            </p>
-
-            {/* Tags */}
-            <div className="mt-5 flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-medium text-red-400">
-                {task.priority}
-              </span>
-
-              <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-400">
-                {task.status}
-              </span>
-
-              <Link
-                href={`/projects/${task.project?.id}`}
-                className="rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-muted transition hover:border-violet-500/40 hover:text-foreground"
-              >
-                {task.project?.projectName}
-              </Link>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              className="flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium text-muted transition hover:bg-surface-hover hover:text-foreground hover:cursor-pointer"
-            >
-              <Pencil className="h-4 w-4" />
-              Edit
-            </button>
-
-            <button
-              type="button"
-              className="rounded-xl border border-border bg-background p-2 text-muted transition hover:bg-surface-hover hover:text-foreground hover:cursor-pointer"
-            >
-              <MoreHorizontal className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="mt-6 grid grid-cols-3 gap-6">
-        {/* Left */}
-        <div className="col-span-2 space-y-6">
-          <section className="rounded-2xl border border-border bg-surface p-6 min-h-96">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-foreground">
-                Repro Steps
-              </h2>
-
-              {canEdit && !isEditingReproSteps && (
+            {/* Actions */}
+            <div className="flex shrink-0 items-center gap-2">
+              {canEdit && (
                 <button
                   type="button"
-                  onClick={() => setIsEditingReproSteps(true)}
-                  className="rounded-lg p-2 text-muted transition hover:bg-surface-hover hover:text-foreground hover:cursor-pointer"
-                  title="Edit repro steps"
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-500 hover:cursor-pointer"
                 >
                   <Pencil className="h-4 w-4" />
+                  Edit
                 </button>
               )}
             </div>
+          </div>
+        </div>
 
-            {isEditingReproSteps && canEdit ? (
-              <ReproStepsEditor
-                initialContent={task.reproSteps ?? ""}
-                onSave={async (content) => {
-                  await updateReproStepsAction(task.id, content);
-                  setIsEditingReproSteps(false);
-                }}
-                onCancel={() => {
-                  setIsEditingReproSteps(false);
-                }}
-              />
-            ) : (
-              <button
-                type="button"
-                disabled={!canEdit}
-                onClick={() => {
-                  if (canEdit) {
-                    setIsEditingReproSteps(true);
-                  }
-                }}
-                className={`mt-4 min-h-80 flex items-start w-full rounded-xl border border-transparent p-4 text-left transition hover:cursor-pointer ${
-                  canEdit
-                    ? "hover:border-border hover:bg-background/50"
-                    : "cursor-default"
-                }`}
-              >
-                {task.reproSteps ? (
-                  <div
-                    className="
+        {/* Main Content */}
+        <div className="mt-6 grid grid-cols-3 gap-6">
+          {/* Left */}
+          <div className="col-span-2 space-y-6">
+            <section className="rounded-2xl border border-border bg-surface p-6 min-h-96">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-foreground">
+                  Repro Steps
+                </h2>
+
+                {canEdit && !isEditingReproSteps && (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingReproSteps(true)}
+                    className="rounded-lg p-2 text-muted transition hover:bg-surface-hover hover:text-foreground hover:cursor-pointer"
+                    title="Edit repro steps"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+
+              {isEditingReproSteps && canEdit ? (
+                <ReproStepsEditor
+                  initialContent={task.reproSteps ?? ""}
+                  onSave={async (content) => {
+                    await updateReproStepsAction(task.id, content);
+                    setIsEditingReproSteps(false);
+                  }}
+                  onCancel={() => {
+                    setIsEditingReproSteps(false);
+                  }}
+                />
+              ) : (
+                <button
+                  type="button"
+                  disabled={!canEdit}
+                  onClick={() => {
+                    if (canEdit) {
+                      setIsEditingReproSteps(true);
+                    }
+                  }}
+                  className={`mt-4 min-h-80 flex items-start w-full rounded-xl border border-transparent p-4 text-left transition hover:cursor-pointer ${
+                    canEdit
+                      ? "hover:border-border hover:bg-background/50"
+                      : "cursor-default"
+                  }`}
+                >
+                  {task.reproSteps ? (
+                    <div
+                      className="
             prose prose-sm max-w-none
             text-muted
             prose-p:leading-7
@@ -201,23 +220,23 @@ export default function TaskDetails({ task, canEdit }: TaskDetailsProps) {
             prose-a:text-violet-400
             prose-code:text-violet-300
           "
-                    dangerouslySetInnerHTML={{
-                      __html: task.reproSteps,
-                    }}
-                  />
-                ) : (
-                  <p className="text-sm text-muted">
-                    {canEdit
-                      ? "Click to add repro steps..."
-                      : "No repro steps have been added."}
-                  </p>
-                )}
-              </button>
-            )}
-          </section>
+                      dangerouslySetInnerHTML={{
+                        __html: task.reproSteps,
+                      }}
+                    />
+                  ) : (
+                    <p className="text-sm text-muted">
+                      {canEdit
+                        ? "Click to add repro steps..."
+                        : "No repro steps have been added."}
+                    </p>
+                  )}
+                </button>
+              )}
+            </section>
 
-          {/* Activity */}
-          {/* <section className="rounded-2xl border border-border bg-surface p-6">
+            {/* Activity */}
+            {/* <section className="rounded-2xl border border-border bg-surface p-6">
             <h2 className="text-lg font-semibold text-foreground">Activity</h2>
 
             <div className="mt-5 space-y-5">
@@ -234,95 +253,95 @@ export default function TaskDetails({ task, canEdit }: TaskDetailsProps) {
               ))}
             </div>
           </section> */}
-        </div>
+          </div>
 
-        {/* Right Sidebar */}
-        <div className="space-y-6">
-          {/* Task Details */}
-          <section className="rounded-2xl border border-border bg-surface p-6">
-            <h2 className="text-lg font-semibold text-foreground">
-              Task Details
-            </h2>
+          {/* Right Sidebar */}
+          <div className="space-y-6">
+            {/* Task Details */}
+            <section className="rounded-2xl border border-border bg-surface p-6">
+              <h2 className="text-lg font-semibold text-foreground">
+                Task Details
+              </h2>
 
-            <div className="mt-5 space-y-5">
-              {/* Status */}
-              <div>
-                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted">
-                  <Clock3 className="h-4 w-4" />
-                  Status
+              <div className="mt-5 space-y-5">
+                {/* Status */}
+                <div>
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted">
+                    <Clock3 className="h-4 w-4" />
+                    Status
+                  </div>
+
+                  <p className="mt-2 text-sm font-medium text-foreground">
+                    {task.status}
+                  </p>
                 </div>
 
-                <p className="mt-2 text-sm font-medium text-foreground">
-                  {task.status}
-                </p>
-              </div>
+                {/* Priority */}
+                <div>
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted">
+                    <Sparkles className="h-4 w-4" />
+                    Priority
+                  </div>
 
-              {/* Priority */}
-              <div>
-                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted">
-                  <Sparkles className="h-4 w-4" />
-                  Priority
+                  <p className="mt-2 text-sm font-medium text-red-400">
+                    {task.priority}
+                  </p>
                 </div>
 
-                <p className="mt-2 text-sm font-medium text-red-400">
-                  {task.priority}
-                </p>
-              </div>
+                {/* Assigned To */}
+                <div>
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted">
+                    <UserRound className="h-4 w-4" />
+                    Assigned To
+                  </div>
 
-              {/* Assigned To */}
-              <div>
-                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted">
-                  <UserRound className="h-4 w-4" />
-                  Assigned To
+                  <p className="mt-2 text-sm font-medium text-foreground">
+                    {task.assignee.fullName}
+                  </p>
                 </div>
 
-                <p className="mt-2 text-sm font-medium text-foreground">
-                  {task.assignee.fullName}
-                </p>
-              </div>
+                {/* Project */}
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-muted">
+                    Project
+                  </div>
 
-              {/* Project */}
-              <div>
-                <div className="text-xs uppercase tracking-wider text-muted">
-                  Project
+                  <Link
+                    href={`/projects/${task.project?.id}`}
+                    className="mt-2 block text-sm font-medium text-violet-400 hover:text-violet-300"
+                  >
+                    {task.project?.projectName}
+                  </Link>
                 </div>
 
-                <Link
-                  href={`/projects/${task.project?.id}`}
-                  className="mt-2 block text-sm font-medium text-violet-400 hover:text-violet-300"
-                >
-                  {task.project?.projectName}
-                </Link>
-              </div>
+                {/* Due Date */}
+                <div>
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted">
+                    <Calendar className="h-4 w-4" />
+                    Due Date
+                  </div>
 
-              {/* Due Date */}
-              <div>
-                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted">
-                  <Calendar className="h-4 w-4" />
-                  Due Date
+                  <p className="mt-2 text-sm font-medium text-foreground">
+                    {formatDate(task.dueDate)}
+                  </p>
                 </div>
 
-                <p className="mt-2 text-sm font-medium text-foreground">
-                  {formatDate(task.dueDate)}
-                </p>
-              </div>
+                {/* Created */}
+                <div>
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted">
+                    <User className="h-4 w-4" />
+                    Created
+                  </div>
 
-              {/* Created */}
-              <div>
-                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted">
-                  <User className="h-4 w-4" />
-                  Created
+                  <p className="mt-2 text-sm font-medium text-foreground">
+                    {formatDate(task.createdAt)}
+                  </p>
                 </div>
-
-                <p className="mt-2 text-sm font-medium text-foreground">
-                  {formatDate(task.createdAt)}
-                </p>
               </div>
-            </div>
-          </section>
+            </section>
 
-          {/* Progress */}
-          {/* <section className="rounded-2xl border border-border bg-surface p-6">
+            {/* Progress */}
+            {/* <section className="rounded-2xl border border-border bg-surface p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground">
                 Progress
@@ -357,9 +376,20 @@ export default function TaskDetails({ task, canEdit }: TaskDetailsProps) {
               {task.subtasks.length} subtasks completed
             </p>
           </section> */}
+          </div>
         </div>
       </div>
-    </div>
+      {canEdit && (
+        <AddEditTaskModal
+          mode="edit"
+          isOpen={isEditModalOpen}
+          task={task}
+          projects={projects}
+          users={users}
+          onClose={() => setIsEditModalOpen(false)}
+        />
+      )}
+    </>
   );
 }
 

@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import clsx from "clsx";
-import AddTaskModal from "../modal-popup/add-task-popup";
+import AddEditTaskModal from "../modal-popup/add-edit-task-popup";
 import type { Prisma } from "@prisma/client";
 import TaskRow from "./task-row";
 
@@ -435,7 +435,8 @@ export default function AllTasks({ tasks, projects, users }: TaskClientProp) {
           </div>
         )}
       </div>
-      <AddTaskModal
+      <AddEditTaskModal
+        mode="create"
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
         projects={projects}
