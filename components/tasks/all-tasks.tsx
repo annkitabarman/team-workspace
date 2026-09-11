@@ -158,6 +158,9 @@ export default function AllTasks({ tasks, projects, users }: TaskClientProp) {
     const matchesPriority =
       filters.priority === "ALL" || task.priority === filters.priority;
 
+    const matchesStatus =
+      selectedStatus === "ALL" || task.status === selectedStatus;
+
     // Due date
     let matchesDueDate = true;
 
@@ -187,7 +190,13 @@ export default function AllTasks({ tasks, projects, users }: TaskClientProp) {
       }
     }
 
-    return matchesSearch && matchesType && matchesPriority && matchesDueDate;
+    return (
+      matchesSearch &&
+      matchesType &&
+      matchesPriority &&
+      matchesDueDate &&
+      matchesStatus
+    );
   });
 
   const activeFilterCount = Object.values(filters).filter(

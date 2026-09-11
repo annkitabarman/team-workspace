@@ -10,6 +10,7 @@ import {
   Calendar,
   MoreHorizontal,
   ListTodo,
+  CircleDot,
 } from "lucide-react";
 import clsx from "clsx";
 import DeleteItemModal from "../modal-popup/delete-item-popup";
@@ -43,8 +44,10 @@ export default function TaskRow({ task }: { task: Task }) {
           <button className="mt-0.5 text-muted transition hover:text-violet-500">
             {task.status === "COMPLETED" ? (
               <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+            ) : task.status === "IN_PROGRESS" ? (
+              <CircleDot className="h-5 w-5 text-violet-400" />
             ) : (
-              <Circle className="h-5 w-5" />
+              <Circle className="h-5 w-5 text-muted" />
             )}
           </button>
 
