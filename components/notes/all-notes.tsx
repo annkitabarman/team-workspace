@@ -2,92 +2,48 @@
 
 import { MoreHorizontal, Notebook, Plus, Pin, Search } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Note = {
-  id: number;
+  id: string;
   title: string;
-  description: string;
-  project: string;
-  updatedAt: string;
+  content: string;
+  project: {
+    id: string;
+    projectName: string;
+  } | null;
+  updatedAt: Date;
   pinned: boolean;
 };
 
-const notes: Note[] = [
-  {
-    id: 1,
-    title: "Authentication",
-    description:
-      "Clerk handles authentication while PostgreSQL stores application data.",
-    project: "Team Workspace",
-    updatedAt: "Today",
-    pinned: true,
-  },
-  {
-    id: 2,
-    title: "Portfolio Ideas",
-    description:
-      "Ideas for improving the portfolio including animations, project pages, and case studies.",
-    project: "Portfolio",
-    updatedAt: "Yesterday",
-    pinned: false,
-  },
-  {
-    id: 3,
-    title: "Angular Signals",
-    description:
-      "Notes about signals, computed values, effects, and when to use them instead of RxJS.",
-    project: "Media Tracker",
-    updatedAt: "3 days ago",
-    pinned: false,
-  },
-  {
-    id: 4,
-    title: "Project Architecture",
-    description:
-      "Application structure, route groups, layouts, authentication flow, and database architecture.",
-    project: "Team Workspace",
-    updatedAt: "4 days ago",
-    pinned: true,
-  },
-  {
-    id: 5,
-    title: "Interview Questions",
-    description:
-      "Frontend, React, Angular, TypeScript, and system design questions to revise.",
-    project: "Career",
-    updatedAt: "1 week ago",
-    pinned: false,
-  },
-  {
-    id: 6,
-    title: "TMDB API",
-    description:
-      "Endpoints, query parameters, genre IDs, pagination, and caching strategy.",
-    project: "Media Tracker",
-    updatedAt: "1 week ago",
-    pinned: false,
-  },
-];
+type NotesClientProp = {
+  notes: Note[];
+};
 
 const filters = ["All", "Recent", "Pinned"];
 
-export default function AllNotes() {
+export default function AllNotes({ notes }: NotesClientProp) {
   const [search, setSearch] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("All");
+  const router = useRouter();
 
-  const filteredNotes = notes.filter((note) => {
+  const filteredNotes = notes?.filter((note) => {
     const searchTerm = search.toLowerCase();
 
     const matchesSearch =
       note.title.toLowerCase().includes(searchTerm) ||
-      note.description.toLowerCase().includes(searchTerm) ||
-      note.project.toLowerCase().includes(searchTerm);
+      note.content.toLowerCase().includes(searchTerm) ||
+      note.project?.projectName.toLowerCase().includes(searchTerm);
+
+    const now = new Date();
+
+    const isRecent =
+      now.getTime() - note.updatedAt.getTime() <= 2 * 24 * 60 * 60 * 1000;
 
     const matchesFilter =
       selectedFilter === "All" ||
       (selectedFilter === "Pinned" && note.pinned) ||
-      (selectedFilter === "Recent" &&
-        ["Today", "Yesterday"].includes(note.updatedAt));
+      (selectedFilter === "Recent" && isRecent);
 
     return matchesSearch && matchesFilter;
   });
@@ -104,7 +60,11 @@ export default function AllNotes() {
           </p>
         </div>
 
-        <button className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-500 hover:cursor-pointer">
+        <button
+          type="button"
+          onClick={() => router.push("/notes/new")}
+          className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-500 hover:cursor-pointer"
+        >
           <Plus className="h-4 w-4" />
           New Note
         </button>
@@ -122,10 +82,6 @@ export default function AllNotes() {
             className="h-10 w-80 rounded-xl border border-border bg-surface pl-10 pr-4 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-violet-500"
           />
         </div>
-
-        <button className="rounded-xl border border-border bg-surface px-4 py-2 text-sm text-muted transition hover:bg-surface-hover hover:text-foreground">
-          All Projects
-        </button>
       </div>
 
       {/* Filters */}
@@ -146,9 +102,9 @@ export default function AllNotes() {
       </div>
 
       {/* Notes */}
-      {filteredNotes.length > 0 ? (
+      {filteredNotes?.length > 0 ? (
         <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {filteredNotes.map((note) => (
+          {filteredNotes?.map((note) => (
             <NoteCard key={note.id} note={note} />
           ))}
         </div>
@@ -168,8 +124,12 @@ export default function AllNotes() {
 }
 
 function NoteCard({ note }: { note: Note }) {
+  const router = useRouter();
   return (
-    <div className="group flex min-h-[260px] cursor-pointer flex-col rounded-2xl border border-border bg-surface p-6 transition duration-200 hover:-translate-y-1 hover:border-violet-500/40 hover:bg-surface-hover hover:shadow-xl hover:shadow-violet-500/10">
+    <div
+      onClick={() => router.push(`/notes/${note.id}`)}
+      className="group flex min-h-[260px] cursor-pointer flex-col rounded-2xl border border-border bg-surface p-6 transition duration-200 hover:-translate-y-1 hover:border-violet-500/40 hover:bg-surface-hover hover:shadow-xl hover:shadow-violet-500/10"
+    >
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="rounded-lg bg-violet-500/10 p-2">
@@ -193,7 +153,7 @@ function NoteCard({ note }: { note: Note }) {
       </h2>
 
       <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted">
-        {note.description}
+        {note.content}
       </p>
 
       <div className="flex-1" />
@@ -201,16 +161,14 @@ function NoteCard({ note }: { note: Note }) {
       {/* Footer */}
       <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
         <div>
-          <p className="text-xs font-medium text-muted">{note.project}</p>
+          <p className="text-xs font-medium text-muted">
+            {note.project?.projectName}
+          </p>
 
           <p className="mt-1 text-xs text-muted-foreground">
-            Updated {note.updatedAt}
+            Updated {note.updatedAt.toLocaleDateString()}
           </p>
         </div>
-
-        <button className="text-xs font-medium text-violet-500 transition hover:text-violet-400">
-          Open →
-        </button>
       </div>
     </div>
   );
