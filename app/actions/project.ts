@@ -12,8 +12,9 @@ import { revalidatePath } from "next/cache";
 export async function createProjectAction(data: CreateProjectData) {
   const userId = await getAuthenticatedUser();
 
+  const res = createProject({ ...data, clerkUserId: userId });
   revalidatePath("/projects");
-  return createProject({ ...data, clerkUserId: userId });
+  return res;
 }
 
 export async function deleteProjectAction(projectId: string) {

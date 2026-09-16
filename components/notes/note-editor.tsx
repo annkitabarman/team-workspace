@@ -21,6 +21,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import { useState } from "react";
+import { createNoteAction, updateNoteAction } from "@/app/actions/notes";
 
 type Project = {
   id: string;
@@ -93,17 +94,20 @@ export default function NoteEditor({ mode, note, projects }: NoteEditorProps) {
     try {
       const content = editor.getHTML();
 
-      console.log({
+      const data = {
         title: title.trim(),
         content,
         projectId: projectId || undefined,
-      });
+      };
 
-      // TODO:
-      // createNoteAction(...)
-      // updateNoteAction(...)
-
-      setSaved(true);
+      if (mode === "edit" && note) {
+        await updateNoteAction(note.id, data);
+        setSaved(true);
+      } else {
+        const newNote = await createNoteAction(data);
+        setSaved(true);
+        router.push(`/notes/${newNote.id}`);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -179,7 +183,7 @@ export default function NoteEditor({ mode, note, projects }: NoteEditorProps) {
             <button
               type="button"
               onClick={() => router.push("/notes")}
-              className="rounded-xl px-4 py-2 text-sm font-medium text-muted transition hover:bg-surface-hover hover:text-foreground"
+              className="rounded-xl px-4 py-2 text-sm font-medium text-muted transition hover:bg-surface-hover hover:text-foreground hover:cursor-pointer"
             >
               Cancel
             </button>
@@ -188,7 +192,7 @@ export default function NoteEditor({ mode, note, projects }: NoteEditorProps) {
               type="button"
               disabled={isSaving || !title.trim()}
               onClick={handleSave}
-              className="rounded-xl bg-violet-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-xl bg-violet-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50 hover:cusor-pointer"
             >
               {isSaving
                 ? "Saving..."
