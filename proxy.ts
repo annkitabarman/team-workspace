@@ -1,6 +1,19 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 
-export default clerkMiddleware();
+export default clerkMiddleware(async (auth, req) => {
+  const pathName = req.nextUrl.pathname;
+
+  const protectedPaths =
+    pathName.startsWith("/dashboard") ||
+    pathName.startsWith("/projects") ||
+    pathName.startsWith("/tasks");
+
+  if (protectedPaths) {
+    await auth.protect({
+      unauthenticatedUrl: new URL("/", req.url).toString(),
+    });
+  }
+});
 
 export const config = {
   matcher: [
