@@ -6,6 +6,7 @@ import {
   deleteProject,
   updateProject,
   type CreateProjectData,
+  getProjects,
 } from "@/lib/project";
 import { revalidatePath } from "next/cache";
 
@@ -40,4 +41,9 @@ export async function updateProjectAction(
   revalidatePath(`/projects/${projectId}`);
 
   return project;
+}
+
+export async function getProjectsAction() {
+  const userId = await getAuthenticatedUser();
+  return await getProjects(userId);
 }

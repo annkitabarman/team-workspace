@@ -1,41 +1,74 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { LogOut } from "lucide-react";
-import { useClerk } from "@clerk/nextjs";
 import { FolderKanban, CheckSquare, Bug } from "lucide-react";
 import DashboardOverview from "./dashboard-overview";
 import DashboardNotes from "./dashboard-notes";
+import { getProjectsAction } from "@/app/actions/project";
+import { useEffect, useState } from "react";
+import { getManyTasksAction } from "@/app/actions/tasks";
+
+const initialOverviewItems = [
+  {
+    title: "Projects",
+    value: 0,
+    icon: FolderKanban,
+  },
+  {
+    title: "Pending Tasks",
+    value: 0,
+    icon: CheckSquare,
+  },
+  {
+    title: "Open Bugs",
+    value: 0,
+    icon: Bug,
+  },
+];
 
 export default function Dashboard() {
   const { user } = useUser();
   const userName = user?.fullName;
-  console.log(userName);
-  const { signOut } = useClerk();
+  const [overviewItems, setOverviewItems] = useState(initialOverviewItems);
 
-  const handleLogout = async () => {
-    await signOut({
-      redirectUrl: "/",
-    });
-  };
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const projects = await getProjectsAction();
+        const tasks = await getManyTasksAction();
+        setOverviewItems((items) =>
+          items.map((item) => {
+            switch (item.title) {
+              case "Projects":
+                return {
+                  ...item,
+                  value: projects.length,
+                };
 
-  const overviewItems = [
-    {
-      title: "Projects",
-      value: 6,
-      icon: FolderKanban,
-    },
-    {
-      title: "Pending Tasks",
-      value: 7,
-      icon: CheckSquare,
-    },
-    {
-      title: "Open Bugs",
-      value: 10,
-      icon: Bug,
-    },
-  ];
+              case "Pending Tasks":
+                return {
+                  ...item,
+                  value: tasks.filter((task) => task.status === "TODO").length,
+                };
+
+              case "Open Bugs":
+                return {
+                  ...item,
+                  value: tasks.filter((task) => task.type === "BUG").length,
+                };
+
+              default:
+                return item;
+            }
+          }),
+        );
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    loadProjects();
+  }, []);
 
   const notes = [
     {
