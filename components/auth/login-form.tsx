@@ -7,6 +7,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useSignIn } from "@clerk/nextjs";
+import { useState } from "react";
 
 type Props = {
   onSwitch: () => void;
@@ -30,8 +31,10 @@ export default function LoginForm({ onSwitch }: Props) {
   });
   const router = useRouter();
   const { signIn } = useSignIn();
+  const [authError, setAuthError] = useState("");
 
   const onSubmit = async (data: LoginFormData) => {
+    setAuthError("");
     try {
       const { error } = await signIn.create({
         identifier: data.email,
@@ -40,6 +43,7 @@ export default function LoginForm({ onSwitch }: Props) {
 
       if (error) {
         console.error(error);
+        setAuthError("Incorrect email or password. Please try again.");
         return;
       }
 
@@ -64,6 +68,7 @@ export default function LoginForm({ onSwitch }: Props) {
       }
     } catch (err) {
       console.error(err);
+      setAuthError("Incorrect email or password. Please try again.");
     }
   };
 
@@ -113,6 +118,12 @@ export default function LoginForm({ onSwitch }: Props) {
             </p>
           )}
         </div>
+
+        {authError && (
+          <p className="text-sm text-red-500" role="alert">
+            {authError}
+          </p>
+        )}
 
         <button
           type="submit"
