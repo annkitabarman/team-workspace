@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import ProjectDetails from "@/components/projects/project-details";
 
-export default async function Home({
+export default async function Page({
   params,
 }: {
   params: Promise<{ id: string }>;

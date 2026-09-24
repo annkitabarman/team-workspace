@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getAuthenticatedUser } from "@/app/actions/auth";
 import { getProjects } from "@/lib/project";
 
-export default async function Home({
+export default async function Page({
   params,
 }: {
   params: Promise<{ id: string }>;

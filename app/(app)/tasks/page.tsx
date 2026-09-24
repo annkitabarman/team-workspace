@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { getAllUsers } from "@/lib/users";
 
-export default async function Home() {
+export default async function Page() {
   const { userId } = await auth();
 
   if (!userId) return null;

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getProjects } from "@/lib/project";
 import { getAuthenticatedUser } from "@/app/actions/auth";
 
-export default async function Home() {
+export default async function Page() {
   const userId = await getAuthenticatedUser();
   const [projects, taskCounts] = await Promise.all([
     getProjects(userId),

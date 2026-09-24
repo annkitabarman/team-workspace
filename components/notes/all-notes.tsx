@@ -153,7 +153,7 @@ function NoteCard({ note }: { note: Note }) {
       </h2>
 
       <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted">
-        {note.content}
+        {getTextPreview(note.content)}
       </p>
 
       <div className="flex-1" />
@@ -172,4 +172,10 @@ function NoteCard({ note }: { note: Note }) {
       </div>
     </div>
   );
+}
+
+function getTextPreview(html: string) {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return div.textContent || "";
 }
